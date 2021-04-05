@@ -28,8 +28,8 @@ public:
                                                 ? bitmap_size_bits / 8 
                                                 : bitmap_size_bits / 8 + 1;
     // clang-format on
-    char (*ldisk)[BLOCK_SIZE];
 private:
+    char (*ldisk)[BLOCK_SIZE];
     std::string save_name;
     void save();
     friend class IOSystem;

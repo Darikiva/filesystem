@@ -13,8 +13,8 @@ class Controller
 public:
     Controller(std::string save_name);
     void reset();
-    std::unique_ptr<Disk> disk;
 private:
+    std::unique_ptr<Disk> disk;
     std::unique_ptr<IOSystem> iosystem;
     std::unique_ptr<FileSystem> filesystem;
 };
