@@ -14,7 +14,6 @@ class FileSystem
 public:
     FileSystem(IOSystem& iosystem);
     void reset();
-
 private:
     IOSystem& iosystem;
     Bitmap bitmap;

@@ -1,4 +1,5 @@
 #include "Descriptors.hpp"
+
 #include <iostream>
 
 namespace FS {
@@ -27,48 +28,47 @@ void Descriptors::set(size_t index, const Entity::FileDescriptor& value)
         first_use = false;
     }
     data[index] = value;
+    unloadDescriptor(index);
 }
 
 void Descriptors::loadDescriptors()
 {
-    std::size_t pos = Disk::bitmap_size_bytes % Disk::BLOCK_SIZE;
-    const std::size_t block_start_index = Disk::bitmap_size_bytes / Disk::BLOCK_SIZE;
-    static constexpr std::size_t descriptor_size_bytes = sizeof(Entity::FileDescriptor);
+    std::size_t pos = Disk::BITMAP_SIZE_BYTES % Disk::BLOCK_SIZE;
+    const std::size_t block_start_index = Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
     char* buffer = new char[Disk::BLOCK_SIZE];
     for (std::size_t index = block_start_index; index < Disk::K; ++index)
     {
         iosystem.read_block(index, buffer);
-        while (pos + descriptor_size_bytes <= Disk::BLOCK_SIZE)
+        while (pos + Disk::DESCRIPTOR_SIZE <= Disk::BLOCK_SIZE)
         {
             auto desc_p = reinterpret_cast<Entity::FileDescriptor*>(&buffer[pos]);
             data.push_back(*desc_p);
-            pos += descriptor_size_bytes;
+            pos += Disk::DESCRIPTOR_SIZE;
         }
         pos = 0;
     }
     delete[] buffer;
 }
 
-
 void Descriptors::unloadDescriptors()
 {
     char* buffer = new char[Disk::BLOCK_SIZE];
-    size_t curr_row = Disk::bitmap_size_bytes / Disk::BLOCK_SIZE;
-    size_t curr_byte = Disk::bitmap_size_bytes % Disk::BLOCK_SIZE;
+    size_t curr_row = Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
+    size_t curr_byte = Disk::BITMAP_SIZE_BYTES % Disk::BLOCK_SIZE;
     size_t curr_data_pos = 0;
-    static constexpr size_t descriptor_size_bytes = sizeof(Entity::FileDescriptor);
-    iosystem.read_block(curr_row, buffer);
     for (; curr_row < Disk::K; ++curr_row)
     {
-        while (curr_byte + descriptor_size_bytes <= Disk::BLOCK_SIZE)
+        iosystem.read_block(curr_row, buffer);
+        while (curr_byte + Disk::DESCRIPTOR_SIZE <= Disk::BLOCK_SIZE)
         {
-            if (curr_data_pos >= data.size()) 
+            if (curr_data_pos >= data.size())
             {
                 iosystem.write_block(curr_row, buffer);
+                delete[] buffer;
                 return;
             }
             auto ch_p = reinterpret_cast<char*>(&data[curr_data_pos]);
-            for (size_t index = 0; index < descriptor_size_bytes; ++index)
+            for (size_t index = 0; index < Disk::DESCRIPTOR_SIZE; ++index)
             {
                 buffer[curr_byte] = ch_p[index];
                 ++curr_byte;
@@ -76,7 +76,33 @@ void Descriptors::unloadDescriptors()
             ++curr_data_pos;
         }
         curr_byte = 0;
+        iosystem.write_block(curr_row, buffer);
     }
+    delete[] buffer;
+}
+
+void Descriptors::unloadDescriptor(size_t index)
+{
+    const size_t row =
+        index <= (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / Disk::DESCRIPTOR_SIZE
+            ? 0
+            : (index - (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / Disk::DESCRIPTOR_SIZE) /
+                      (Disk::BLOCK_SIZE / Disk::DESCRIPTOR_SIZE) +
+                  1;
+    size_t byte =
+        index <= (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / Disk::DESCRIPTOR_SIZE
+            ? Disk::BITMAP_SIZE_BYTES + index * Disk::DESCRIPTOR_SIZE
+            : (index - (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / Disk::DESCRIPTOR_SIZE) %
+                  (Disk::BLOCK_SIZE / Disk::DESCRIPTOR_SIZE) * Disk::DESCRIPTOR_SIZE;
+    char* buffer = new char[Disk::BLOCK_SIZE];
+    iosystem.read_block(row, buffer);
+    auto ch_p = reinterpret_cast<char*>(&data[index]);
+    for (size_t index = 0; index < Disk::DESCRIPTOR_SIZE; ++index)
+    {
+        buffer[byte] = ch_p[index];
+        ++byte;
+    }
+    iosystem.write_block(row, buffer);
     delete[] buffer;
 }
 
@@ -90,7 +116,7 @@ void Descriptors::reset()
     data[0] = directory_desc;
     for (size_t index = 1; index < data.size(); ++index)
     {
-        data[index] = {0, {-1, 1, -1}};
+        data[index] = {0, {-1, -1, -1}};
     }
     unloadDescriptors();
 }

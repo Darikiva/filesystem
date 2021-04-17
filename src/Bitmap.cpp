@@ -1,4 +1,5 @@
 #include "Bitmap.hpp"
+
 #include <iostream>
 
 namespace FS {
@@ -88,7 +89,7 @@ void Bitmap::unloadBitmap()
     for (auto index = 0; index < Disk::BLOCK_SIZE; ++index)
     {
         char a = 0;
-        for (auto _ = 0; _ < 8; ++_)
+        for (auto _ = 0; _ < 7; ++_)
         {
             if (data[curr_pos])
             {
@@ -105,6 +106,18 @@ void Bitmap::unloadBitmap()
                 return;
             }
         }
+        if (data[curr_pos])
+        {
+            a |= 0b10000000;
+        }
+        ++curr_pos;
+        if (curr_pos >= Disk::bitmap_size_bits)
+            {
+                buffer[index] = a;
+                iosystem.write_block(last_block_index, buffer);
+                delete[] buffer;
+                return;
+            }
         buffer[index] = a;
     }
     iosystem.write_block(last_block_index, buffer);
