@@ -33,7 +33,7 @@ void Bitmap::loadBitmap()
 {
     std::size_t curr_pos = 0;
     char* buffer = new char[Disk::BLOCK_SIZE];
-    for (std::size_t curr_row = 0; curr_row <= Disk::bitmap_size_bytes / Disk::BLOCK_SIZE;
+    for (std::size_t curr_row = 0; curr_row <= Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
          ++curr_row)
     {
         iosystem.read_block(curr_row, buffer);
@@ -42,7 +42,7 @@ void Bitmap::loadBitmap()
             char byte = buffer[j];
             for (auto _ = 0; _ < sizeof(char) * 8; ++_)
             {
-                if (curr_pos >= Disk::bitmap_size_bits)
+                if (curr_pos >= Disk::BITMAP_SIZE_BITS)
                 {
                     return;
                 }
@@ -60,7 +60,7 @@ void Bitmap::loadBitmap()
 
 void Bitmap::unloadBitmap()
 {
-    const size_t last_block_index = Disk::bitmap_size_bytes / Disk::BLOCK_SIZE;
+    const size_t last_block_index = Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
     size_t curr_pos = 0;
     char* buffer = new char[Disk::BLOCK_SIZE];
     for (size_t curr_row = 0; curr_row < last_block_index; ++curr_row)
@@ -81,7 +81,7 @@ void Bitmap::unloadBitmap()
         }
         iosystem.write_block(curr_row, buffer);
     }
-    if (curr_pos >= Disk::bitmap_size_bits)
+    if (curr_pos >= Disk::BITMAP_SIZE_BITS)
     {
         return;
     }
@@ -98,7 +98,7 @@ void Bitmap::unloadBitmap()
             a >>= 1;
             a &= 0b01111111;
             ++curr_pos;
-            if (curr_pos >= Disk::bitmap_size_bits)
+            if (curr_pos >= Disk::BITMAP_SIZE_BITS)
             {
                 buffer[index] = a;
                 iosystem.write_block(last_block_index, buffer);
@@ -111,7 +111,7 @@ void Bitmap::unloadBitmap()
             a |= 0b10000000;
         }
         ++curr_pos;
-        if (curr_pos >= Disk::bitmap_size_bits)
+        if (curr_pos >= Disk::BITMAP_SIZE_BITS)
             {
                 buffer[index] = a;
                 iosystem.write_block(last_block_index, buffer);
