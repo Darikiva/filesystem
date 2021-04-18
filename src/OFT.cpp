@@ -4,18 +4,23 @@
 
 namespace FS {
 
-OFT::OFT(IOSystem& iosystem)
+OFT::OFT(IOSystem* iosystem)
     : iosystem{iosystem}
     , first_use{true}
 {
 }
 
-const OFTEntry& OFT::get(std::size_t index)
+IOSystem* OFT::getIoSystem() const
+{
+    return iosystem;
+}
+
+OFTEntry OFT::get(std::size_t index)
 {
     if (first_use)
     {
         for(int i = 0; i < 5; i++) {
-            data[i] = OFTEntry(-1);
+            data.push_back(emptyOFTEntry);
         }
         first_use = false;
     }
@@ -27,7 +32,7 @@ void OFT::set(size_t index, const OFTEntry& value)
     if (first_use)
     {
         for(int i = 0; i < 5; i++) {
-            data[i] = OFTEntry(-1);
+            data.push_back(emptyOFTEntry);
         }
         first_use = false;
     }
@@ -37,7 +42,7 @@ void OFT::set(size_t index, const OFTEntry& value)
 void OFT::reset()
 {
     for(int i = 0; i < 5; i++) {
-        data[i] = OFTEntry(-1);
+        data.push_back(emptyOFTEntry);
     }
 }
 

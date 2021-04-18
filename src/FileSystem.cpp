@@ -7,7 +7,7 @@ FileSystem::FileSystem(IOSystem& iosystem)
     , bitmap{iosystem}
     , descriptors{iosystem}
     , directories{iosystem}
-    , oft {iosystem}
+    , oft{&iosystem}
 {
 }
 
@@ -135,12 +135,11 @@ void FileSystem::destroy(const std::string& file_name)
 /**
  *
  * 1) search directory to find the index of the file_descriptor +
- * 2) allocate a free OFT entry
- * 3) fill in curr_pos and file_descriptor_index
- * 4) read the first block of file into the buffer[]
- * 5) return OFT index (error status)
+ * 2) allocate a free OFT entry +
+ * 3) fill in curr_pos and file_descriptor_index +
+ * 4) read the first block of file into the buffer[] +
+ * 5) return OFT index (error status) +
  */
-
 size_t FileSystem::open(const std::string& file_name)
 {
     int desc_index = -1;
@@ -158,30 +157,54 @@ size_t FileSystem::open(const std::string& file_name)
         }
     }
 
-    //OFTEntry oftEntry(desc_index);
+    int oft_index = -1;
+    for (int i = 0; i < oft.size(); i++) {
+        if (oft.get(i).isEmpty()) {
+            oft_index = i;
+        }
+    }
 
-    return 0;
+    if (oft_index == -1) {
+        //throw some exception
+        return -1;
+    }
+
+    oft.set(oft_index, OFTEntry(
+                           descriptors.get(desc_index), oft.getIoSystem()));
+
+    return oft_index;
 }
 
+/**
+ *
+ * 1) write buffer to disk +
+ * 2) update file_length of descriptor TODO
+ * 3) free OWT entry +
+ */
 void FileSystem::close(size_t index)
 {
-    // write buffer to disk
-    // update file_length if descriptor
-    // free OWT entry
-    // return status
+     oft.get(index).onClose();
+     //TODO file_length
+     oft.set(index, oft.emptyOFTEntry);
 }
 
-void FileSystem::read(size_t index, char* mem_area, size_t count) {}
+void FileSystem::read(size_t index, char* mem_area, size_t count)
+{
 
-void FileSystem::write(size_t index, char* mem_area, size_t count) {}
+}
+
+void FileSystem::write(size_t index, char* mem_area, size_t count)
+{
+
+}
 
 void FileSystem::lseek(size_t index, size_t pos)
 {
-    /* - ????
-if (pos == 0) {
-    reset();
-}
-    */
+    if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1) {
+        //throw some exception
+        return;
+    }
+    oft.get(index).setPosition(pos);
 }
 
 std::unordered_map<std::string, size_t> FileSystem::directory()

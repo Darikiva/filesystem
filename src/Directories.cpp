@@ -10,7 +10,7 @@ Directories::Directories(IOSystem& iosystem)
 {
 }
 
-const Entity::DirectoryEntry& Directories::get(std::size_t index)
+Entity::DirectoryEntry& Directories::get(std::size_t index)
 {
     if (first_use)
     {
