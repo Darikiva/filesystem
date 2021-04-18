@@ -6,6 +6,7 @@ FileSystem::FileSystem(IOSystem& iosystem)
     : iosystem{iosystem}
     , bitmap{iosystem}
     , descriptors{iosystem}
+    , directories{iosystem}
 {
 }
 
@@ -15,13 +16,80 @@ void FileSystem::reset()
     descriptors.reset();
 }
 
+/**
+ *
+ * 1) find a free file descriptor (scan ldisk[0] through ldisk[k-1])
+ * 2) find free entry in the directory_entries
+ * 3) verify that the file does not already exist -> (yes) return error status
+ * 4) enter file_name and descriptor_index into directory entry
+ * 5) return status
+ */
 void FileSystem::create(const std::string& file_name)
 {
-    // find a free file descriptor (scan ldisk[0] through ldisk[k-1])
-    // find free entry in the directory_entries
-    // verify that the file does not already exist -> (yes) return error status
-    // enter file_name and descriptor_index into directory entry
-    // return status
+    std::int8_t desc_index = -1;
+    for (int i = 0; i < descriptors.size(); i++) {
+        auto data = descriptors.get(i);
+        if (data.indexes[0] == -1) {
+            desc_index = i;
+            break;
+        }
+    }
+
+    if (desc_index == -1) {
+        //throw some exception
+        return;
+    }
+
+    int dir_index = -1;
+    for (auto i = directories.size() - 1; i >= 0 ; i--) {
+        auto data = directories.get(i);
+        if (data.descriptor_index == -1) {
+            dir_index = i;
+        } else {
+            bool same_names = true;
+            for (int j = 0; j < 4; j++) {
+                if (data.file_name[j] != file_name.at(j)) {
+                    same_names = false;
+                }
+            }
+            if (same_names) {
+                //throw error
+                return;
+            }
+        }
+    }
+
+    if (dir_index == -1) {
+        //throw some exception
+        return;
+    }
+
+    //free blocks
+
+    std::int8_t free_blocks_indexes[3] = {-1, -1, -1};
+    int number_of_found = 0;
+    for (int i = 0; i < bitmap.size(); i++) {
+        if (number_of_found == 3) {
+            break;
+        }
+        if (!bitmap.get(i)) {
+            free_blocks_indexes[number_of_found] = i;
+            ++number_of_found;
+        }
+    }
+
+    if (number_of_found != 3) {
+        //throw exception
+        return;
+    }
+
+    Entity::FileDescriptor directory_desc = {0, *free_blocks_indexes};
+    descriptors.set(desc_index, directory_desc);
+
+    char name_char[4] {file_name.at(0), file_name.at(1),
+                        file_name.at(2), file_name.at(3)};
+    Entity::DirectoryEntry directory_entry = {desc_index, *name_char};
+    directories.set(dir_index, directory_entry);
 }
 
 void FileSystem::destroy(const std::string& file_name)

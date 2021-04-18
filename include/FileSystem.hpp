@@ -5,6 +5,7 @@
 
 #include "Bitmap.hpp"
 #include "Descriptors.hpp"
+#include "Directories.hpp"
 #include "IOSystem.hpp"
 
 namespace FS {
@@ -30,6 +31,7 @@ private:
     IOSystem& iosystem;
     Bitmap bitmap;
     Descriptors descriptors;
+    Directories directories;
 };
 
 } // namespace FS

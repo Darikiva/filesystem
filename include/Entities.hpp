@@ -10,7 +10,7 @@ namespace Entity {
 
 struct DirectoryEntry
 {
-    std::uint8_t descriptor_index;
+    std::int8_t descriptor_index;
     char file_name[4];
 };
 
