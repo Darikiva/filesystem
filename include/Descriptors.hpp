@@ -4,6 +4,7 @@
 
 #include "Disk.hpp"
 #include "IOSystem.hpp"
+#include "Entities.hpp"
 
 namespace FS {
 
@@ -24,6 +25,7 @@ private:
     void loadDescriptors();
     void unloadDescriptors();
     void unloadDescriptor(size_t index);
+    static constexpr size_t descriptor_size = sizeof(Entity::FileDescriptor);
 };
 
 } // namespace FS
