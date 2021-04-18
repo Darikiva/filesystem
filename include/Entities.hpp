@@ -4,7 +4,6 @@
 
 #include "Bitmap.hpp"
 #include "Disk.hpp"
-#include "OFTEntry.hpp"
 
 namespace FS {
 namespace Entity {
