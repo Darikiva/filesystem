@@ -7,6 +7,7 @@ FileSystem::FileSystem(IOSystem& iosystem)
     , bitmap{iosystem}
     , descriptors{iosystem}
     , directories{iosystem}
+    , oft {iosystem}
 {
 }
 
@@ -14,6 +15,8 @@ void FileSystem::reset()
 {
     bitmap.reset();
     descriptors.reset();
+    directories.reset();
+    oft.reset();
 }
 
 /**
@@ -92,22 +95,70 @@ void FileSystem::create(const std::string& file_name)
     directories.set(dir_index, directory_entry);
 }
 
+/**
+ *
+ * 1) find file_descriptor in directory
+ * 2) remove directory entry
+ * 3) update bitmap to reflect freed blocks
+ * 4) free file descriptor
+ * 5) return status
+ */
 void FileSystem::destroy(const std::string& file_name)
 {
-    // find file_descriptor in directory
-    // remove directory entry
-    // update bitmap to reflect freed blocks
-    // free file descriptor
-    // return status
+    int desc_index = -1;
+    for (auto i = 0; i < directories.size() ; i++) {
+        auto data = directories.get(i);
+        bool same_names = true;
+        for (int j = 0; j < 4; j++) {
+            if (data.file_name[j] != file_name.at(j)) {
+                same_names = false;
+            }
+        }
+        if (same_names) {
+            desc_index = data.descriptor_index;
+            char empty_name[4] = {};
+            Entity::DirectoryEntry empty_entry = {-1, *empty_name};
+            directories.set(i, empty_entry);
+            break;
+        }
+    }
+
+    auto desc = descriptors.get(desc_index);
+    for (signed char index : desc.indexes) {
+        bitmap.set(index, false);
+    }
+
+    Entity::FileDescriptor empty_desc = {0, {-1, -1, -1}};
+    descriptors.set(desc_index, empty_desc);
 }
+
+/**
+ *
+ * 1) search directory to find the index of the file_descriptor +
+ * 2) allocate a free OFT entry
+ * 3) fill in curr_pos and file_descriptor_index
+ * 4) read the first block of file into the buffer[]
+ * 5) return OFT index (error status)
+ */
 
 size_t FileSystem::open(const std::string& file_name)
 {
-    // search directory to find the index of the file_descriptor
-    // allocate a free OFT entry
-    // fill in curr_pos and file_descriptor_index
-    // read the first block of file into the buffer[]
-    // return OFT index (error status)
+    int desc_index = -1;
+    for (auto i = 0; i < directories.size() ; i++) {
+        auto data = directories.get(i);
+        bool same_names = true;
+        for (int j = 0; j < 4; j++) {
+            if (data.file_name[j] != file_name.at(j)) {
+                same_names = false;
+            }
+        }
+        if (same_names) {
+            desc_index = data.descriptor_index;
+            break;
+        }
+    }
+
+    //OFTEntry oftEntry(desc_index);
 
     return 0;
 }

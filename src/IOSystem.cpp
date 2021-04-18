@@ -10,6 +10,7 @@ namespace FS {
 IOSystem::IOSystem(Disk& disk)
     : disk{disk}
 {
+
 }
 
 void IOSystem::read_block(std::size_t i, char* p)
