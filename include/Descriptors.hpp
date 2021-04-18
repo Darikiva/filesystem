@@ -15,7 +15,7 @@ public:
     const Entity::FileDescriptor& get(std::size_t index);
     void set(size_t index, const Entity::FileDescriptor& value);
     void reset();
-    inline size_t size() const { return Disk::bitmap_size_bits; }
+    inline size_t size() const { return Disk::BITMAP_SIZE_BITS; }
 
 private:
     std::vector<Entity::FileDescriptor> data;
@@ -23,6 +23,7 @@ private:
     bool first_use;
     void loadDescriptors();
     void unloadDescriptors();
+    void unloadDescriptor(size_t index);
 };
 
 } // namespace FS

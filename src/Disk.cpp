@@ -10,7 +10,6 @@ Disk::Disk(std::string save_name)
 {
     ldisk = new char[BLOCKS_AMOUNT][BLOCK_SIZE];
     std::ifstream in(save_name, std::ios::binary | std::ios::in);
-    
     for (std::size_t index = 0; index < BLOCKS_AMOUNT; ++index)
     {
         in.read(ldisk[index], BLOCK_SIZE);
@@ -37,7 +36,7 @@ void Disk::save()
 // {
 //     std::size_t curr_byte = 0;
 //     std::size_t curr_row = 0;
-//     for (; curr_byte < bitmap_size_bytes; ++curr_byte)
+//     for (; curr_byte < BITMAP_SIZE_BYTES; ++curr_byte)
 //     {
 //         curr_row = (curr_byte) / BLOCK_SIZE;
 //         ldisk[curr_row][curr_byte % BLOCK_SIZE] = 'e';
@@ -54,7 +53,6 @@ void Disk::save()
 //             {
 //                 ldisk[curr_row][curr_byte] = data[j];
 //                 ++curr_byte;
-                
 //             }
 //         }
 //         curr_byte = 0;
