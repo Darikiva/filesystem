@@ -34,3 +34,7 @@
 # vscode stuff
 .vscode
 build
+
+# intellij idea stuff
+.idea
+cmake-build-debug

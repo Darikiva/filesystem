@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Disk.hpp"
-#include <string>
-#include <fstream>
-#include <boost/optional.hpp>
 #include <bitset>
+#include <boost/optional.hpp>
+#include <fstream>
+#include <string>
 
+#include "Disk.hpp"
 
 namespace FS {
 

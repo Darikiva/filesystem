@@ -16,7 +16,7 @@ public:
     void reset();
 
 private:
-    std::bitset<Disk::bitmap_size_bits> data;
+    std::bitset<Disk::BITMAP_SIZE_BITS> data;
     IOSystem& iosystem;
     bool first_use;
     void loadBitmap();
