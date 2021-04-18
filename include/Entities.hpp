@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+#include "Bitmap.hpp"
+#include "Disk.hpp"
+
 namespace FS {
 namespace Entity {
 

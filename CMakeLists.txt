@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(TOP_DIR ${CMAKE_SOURCE_DIR})
 set(SRC_DIR ${TOP_DIR}/src)
+set(INC_DIR ${TOP_DIR}/include)
 
-include_directories(include)
+include_directories(${INC_DIR})
 include_directories(${SRC_DIR})
-
 
 file(GLOB_RECURSE FILESYSTEM_SRC *.cpp)
 

@@ -5,8 +5,6 @@
 #include <string_view>
 #include <vector>
 
-#include "Entities.hpp"
-
 namespace FS {
 
 class Disk
@@ -28,7 +26,6 @@ public:
                                                 ? BITMAP_SIZE_BITS / 8
                                                 : BITMAP_SIZE_BITS / 8 + 1;
     // clang-format on
-    static constexpr size_t DESCRIPTOR_SIZE = sizeof(Entity::FileDescriptor);
 
 private:
     char (*ldisk)[BLOCK_SIZE];
