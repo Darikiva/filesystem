@@ -31,7 +31,7 @@ void Descriptors::set(size_t index, const Entity::FileDescriptor& value)
     unloadDescriptor(index);
 }
 
-void Descriptors::loadDescriptors()
+void Descriptors::loadDescriptors() // load all descriptors to dara vector
 {
     std::size_t pos = Disk::BITMAP_SIZE_BYTES % Disk::BLOCK_SIZE;
     const std::size_t block_start_index = Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
@@ -50,7 +50,7 @@ void Descriptors::loadDescriptors()
     delete[] buffer;
 }
 
-void Descriptors::unloadDescriptors()
+void Descriptors::unloadDescriptors() // write all descriptors to disk
 {
     char* buffer = new char[Disk::BLOCK_SIZE];
     size_t curr_row = Disk::BITMAP_SIZE_BYTES / Disk::BLOCK_SIZE;
@@ -81,7 +81,7 @@ void Descriptors::unloadDescriptors()
     delete[] buffer;
 }
 
-void Descriptors::unloadDescriptor(size_t index)
+void Descriptors::unloadDescriptor(size_t index) // write descriptor to disk
 {
     const size_t row =
         index <= (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size

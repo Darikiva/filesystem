@@ -28,7 +28,7 @@ void Directories::set(size_t index, const Entity::DirectoryEntry& value)
         first_use = false;
     }
     data[index] = value;
-    unloadDirectories(index);
+    unloadDirectories();
 }
 
 void Directories::loadDirectories()
@@ -37,7 +37,7 @@ void Directories::loadDirectories()
     const std::size_t block_start_index = Disk::K;
     char* buffer = new char[Disk::BLOCK_SIZE];
 
-    iosystem.read_block(index, buffer);
+    iosystem.read_block(block_start_index, buffer);
     while (pos + directory_size <= Disk::BLOCK_SIZE)
     {
         auto dir_p = reinterpret_cast<Entity::DirectoryEntry*>(&buffer[pos]);
