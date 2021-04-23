@@ -42,7 +42,7 @@ Status FileSystem::create(const std::string& file_name)
 
     if (desc_index == -1)
     {
-        return Status::Error;
+        return Status::NoSpace;
     }
 
     int dir_index = -1;
@@ -65,14 +65,14 @@ Status FileSystem::create(const std::string& file_name)
             }
             if (same_names)
             {
-                return Status::Error;
+                return Status::AlreadyExists;
             }
         }
     }
 
     if (dir_index == -1)
     {
-        return Status::Error;
+        return Status::NoSpace;
     }
 
     // free blocks
@@ -94,7 +94,7 @@ Status FileSystem::create(const std::string& file_name)
 
     if (number_of_found != 3)
     {
-        return Status::Error;
+        return Status::NoSpace;
     }
 
     Entity::FileDescriptor directory_desc = {0, *free_blocks_indexes};
@@ -117,10 +117,10 @@ Status FileSystem::create(const std::string& file_name)
 Status FileSystem::destroy(const std::string& file_name)
 {
     int desc_index = -1;
+    bool same_names = true;
     for (auto i = 0; i < directories.size(); i++)
     {
         auto data = directories.get(i);
-        bool same_names = true;
         for (int j = 0; j < 4; j++)
         {
             if (data.file_name[j] != file_name.at(j))
@@ -135,9 +135,11 @@ Status FileSystem::destroy(const std::string& file_name)
             Entity::DirectoryEntry empty_entry = {-1, *empty_name};
             directories.set(i, empty_entry);
             break;
-        } else {
-            return Status::Error;
         }
+    }
+    if (!same_names)
+    {
+        return Status::NotFound;
     }
 
     auto desc = descriptors.get(desc_index);
@@ -159,9 +161,9 @@ Status FileSystem::destroy(const std::string& file_name)
  * 4) read the first block of file into the buffer[] +
  * 5) return OFT index (error status) +
  */
-size_t FileSystem::open(const std::string& file_name)
+std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
 {
-    //search directories for file and get descriptor index
+    // search directories for file and get descriptor index
     int desc_index = -1;
     for (auto i = 0; i < directories.size(); i++)
     {
@@ -181,7 +183,12 @@ size_t FileSystem::open(const std::string& file_name)
         }
     }
 
-    //find free oft
+    if (desc_index == -1)
+    {
+        return std::pair<Status, size_t>(Status::NotFound, -1);
+    }
+
+    // find free oft
     int oft_index = -1;
     for (int i = 0; i < oft.size(); i++)
     {
@@ -193,14 +200,12 @@ size_t FileSystem::open(const std::string& file_name)
 
     if (oft_index == -1)
     {
-        // throw some exception
-        return -1;
+        return std::pair<Status, size_t>(Status::NoSpace, -1);
     }
 
-    oft.set(oft_index,
-            OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
+    oft.set(oft_index, OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
 
-    return oft_index;
+    return std::pair<Status, size_t>(Status::Success, oft_index);
 }
 
 /**
@@ -209,41 +214,28 @@ size_t FileSystem::open(const std::string& file_name)
  * 2) update file_length of descriptor +
  * 3) free OWT entry +
  */
-void FileSystem::close(size_t index)
+Status FileSystem::close(size_t index)
 {
     OFTEntry* oft_entry = oft.get(index);
 
-    if (oft_entry == nullptr)
+    if (oft_entry == nullptr || oft_entry->isEmpty())
     {
-        // throw exception
-        return;
-    }
-
-    if (oft_entry->isEmpty())
-    {
-        // throw exception
-        return;
+        return Status::NotFound;
     }
 
     oft_entry->onClose();
     descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
     oft.set(index, oft.emptyOFTEntry);
+    return Status::Success;
 }
 
-void FileSystem::read(size_t index, char* mem_area, size_t count)
+std::pair<Status, size_t> FileSystem::read(size_t index, char* mem_area, size_t count)
 {
     OFTEntry* oft_entry = oft.get(index);
 
-    if (oft_entry == nullptr)
+    if (oft_entry == nullptr || oft_entry->isEmpty())
     {
-        // throw exception
-        return;
-    }
-
-    if (oft_entry->isEmpty())
-    {
-        // throw exception
-        return;
+        return std::pair<Status, size_t>(Status::NotFound, 0);
     }
 
     const char* read_chars = oft_entry->readFromBuffer(count);
@@ -251,7 +243,7 @@ void FileSystem::read(size_t index, char* mem_area, size_t count)
     {
         if (sizeof(mem_area) == i)
         {
-            // throw reach mem_area end
+            return std::pair<Status, size_t>(Status::OutputArrIndexOutOfBounds, i);
             break;
         }
 
@@ -260,50 +252,43 @@ void FileSystem::read(size_t index, char* mem_area, size_t count)
 
     if (sizeof(read_chars) != count)
     {
-        // throw reach end of file
+        return std::pair<Status, size_t>(Status::EndOfFile, sizeof(read_chars));
     }
     else
     {
-        // successful status
+        return std::pair<Status, size_t>(Status::Success, count);
     }
 }
 
-void FileSystem::write(size_t index, char* mem_area, size_t count)
+std::pair<Status, size_t> FileSystem::write(size_t index, char* mem_area, size_t count)
 {
     OFTEntry* oft_entry = oft.get(index);
 
-    if (oft_entry == nullptr)
+    if (oft_entry == nullptr || oft_entry->isEmpty())
     {
-        // throw exception
-        return;
-    }
-
-    if (oft_entry->isEmpty())
-    {
-        // throw exception
-        return;
+        return std::pair<Status, size_t>(Status::NotFound, 0);
     }
 
     size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
 
     if (number_of_written != count)
     {
-        // throw reach end of file
+        return std::pair<Status, size_t>(Status::EndOfFile, number_of_written);
     }
     else
     {
-        // successful status
+        return std::pair<Status, size_t>(Status::Success, count);
     }
 }
 
-void FileSystem::lseek(size_t index, size_t pos)
+Status FileSystem::lseek(size_t index, size_t pos)
 {
     if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
     {
-        // throw some exception
-        return;
+        return Status::PositionOutOfBounds;
     }
     oft.get(index)->setPosition(pos);
+    return Status::Success;
 }
 
 std::unordered_map<std::string, size_t> FileSystem::directory()
