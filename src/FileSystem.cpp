@@ -30,7 +30,7 @@ void FileSystem::reset()
 Status FileSystem::create(const std::string& file_name)
 {
     std::int8_t desc_index = -1;
-    for (int i = 0; i < descriptors.size(); i++)
+    for (size_t i = 0; i < descriptors.size(); i++)
     {
         auto data = descriptors.get(i);
         if (data.indexes[0] == -1)
@@ -46,7 +46,7 @@ Status FileSystem::create(const std::string& file_name)
     }
 
     int dir_index = -1;
-    for (auto i = directories.size() - 1; i >= 0; i--)
+    for (size_t i = directories.size() - 1; i >= 0; i--)
     {
         auto data = directories.get(i);
         if (data.descriptor_index == -1)
@@ -56,7 +56,7 @@ Status FileSystem::create(const std::string& file_name)
         else
         {
             bool same_names = true;
-            for (int j = 0; j < 4; j++)
+            for (size_t j = 0; j < 4; j++)
             {
                 if (data.file_name[j] != file_name.at(j))
                 {
@@ -76,10 +76,9 @@ Status FileSystem::create(const std::string& file_name)
     }
 
     // free blocks
-
     std::int8_t free_blocks_indexes[3] = {-1, -1, -1};
     int number_of_found = 0;
-    for (int i = 0; i < bitmap.size(); i++)
+    for (size_t i = 0; i < bitmap.size(); i++)
     {
         if (number_of_found == 3)
         {
@@ -118,10 +117,10 @@ Status FileSystem::destroy(const std::string& file_name)
 {
     int desc_index = -1;
     bool same_names = true;
-    for (auto i = 0; i < directories.size(); i++)
+    for (size_t i = 0; i < directories.size(); i++)
     {
         auto data = directories.get(i);
-        for (int j = 0; j < 4; j++)
+        for (size_t j = 0; j < 4; j++)
         {
             if (data.file_name[j] != file_name.at(j))
             {
@@ -165,11 +164,11 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
 {
     // search directories for file and get descriptor index
     int desc_index = -1;
-    for (auto i = 0; i < directories.size(); i++)
+    for (size_t i = 0; i < directories.size(); i++)
     {
         auto data = directories.get(i);
         bool same_names = true;
-        for (int j = 0; j < 4; j++)
+        for (size_t j = 0; j < 4; j++)
         {
             if (data.file_name[j] != file_name.at(j))
             {
@@ -190,7 +189,7 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
 
     // find free oft
     int oft_index = -1;
-    for (int i = 0; i < oft.size(); i++)
+    for (size_t i = 0; i < oft.size(); i++)
     {
         if (oft.get(i)->isEmpty())
         {
@@ -229,21 +228,21 @@ Status FileSystem::close(size_t index)
     return Status::Success;
 }
 
-std::pair<Status, size_t> FileSystem::read(size_t index, char* mem_area, size_t count)
+std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 {
     OFTEntry* oft_entry = oft.get(index);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
-        return std::pair<Status, size_t>(Status::NotFound, 0);
+        return std::pair<Status, int>(Status::NotFound, 0);
     }
 
     const char* read_chars = oft_entry->readFromBuffer(count);
-    for (int i = 0; i < sizeof(read_chars); i++)
+    for (size_t i = 0; i < sizeof(read_chars); i++)
     {
         if (sizeof(mem_area) == i)
         {
-            return std::pair<Status, size_t>(Status::OutputArrIndexOutOfBounds, i);
+            return std::pair<Status, int>(Status::OutputArrIndexOutOfBounds, i);
             break;
         }
 
@@ -252,32 +251,32 @@ std::pair<Status, size_t> FileSystem::read(size_t index, char* mem_area, size_t 
 
     if (sizeof(read_chars) != count)
     {
-        return std::pair<Status, size_t>(Status::EndOfFile, sizeof(read_chars));
+        return std::pair<Status, int>(Status::EndOfFile, sizeof(read_chars));
     }
     else
     {
-        return std::pair<Status, size_t>(Status::Success, count);
+        return std::pair<Status, int>(Status::Success, count);
     }
 }
 
-std::pair<Status, size_t> FileSystem::write(size_t index, char* mem_area, size_t count)
+std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count)
 {
     OFTEntry* oft_entry = oft.get(index);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
-        return std::pair<Status, size_t>(Status::NotFound, 0);
+        return std::pair<Status, int>(Status::NotFound, 0);
     }
 
     size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
 
     if (number_of_written != count)
     {
-        return std::pair<Status, size_t>(Status::EndOfFile, number_of_written);
+        return std::pair<Status, int>(Status::EndOfFile, number_of_written);
     }
     else
     {
-        return std::pair<Status, size_t>(Status::Success, count);
+        return std::pair<Status, int>(Status::Success, count);
     }
 }
 
@@ -291,9 +290,14 @@ Status FileSystem::lseek(size_t index, size_t pos)
     return Status::Success;
 }
 
-std::unordered_map<std::string, size_t> FileSystem::directory()
+std::unordered_map<std::string, int8_t> FileSystem::directory()
 {
-    return std::unordered_map<std::string, size_t>();
+    std::unordered_map<std::string, int8_t> directory_map;
+    for(size_t i = 0; i < directories.size(); i++) {
+        auto directory = directories.get(i);
+        directory_map[directory.file_name] = directory.descriptor_index;
+    }
+    return directory_map;
 }
 
 } // namespace FS
