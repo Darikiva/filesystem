@@ -2,30 +2,142 @@
 
 namespace FS {
 
-void OFTEntry::setBuffer(const char* new_buffer)
+size_t OFTEntry::getCurrBlockIndex()
 {
-    if (is_buffer_changed)
+    int curr_block_index = 0;
+    for (int i = 1; i < sizeof(file_descriptor.indexes); i++)
     {
-        iosystem->write_block(changed_block, buffer);
+        if (file_descriptor.indexes[i] == cur_block)
+        {
+            curr_block_index = i;
+        }
     }
-
-    //TODO CARRYOVER
-    for (int i = cur_pos; i < sizeof(new_buffer) + cur_pos && i < Disk::BLOCK_SIZE; i++)
-    {
-        buffer[i] = new_buffer[i];
-    }
-    is_buffer_changed = true;
-    changed_block = cur_block;
+    return curr_block_index;
 }
 
-const char* OFTEntry::readBuffer()
+size_t OFTEntry::getNextBlock()
 {
+    int curr_block_index = getCurrBlockIndex();
+    if (curr_block_index == sizeof(file_descriptor.indexes) - 1)
+    {
+        return -1;
+    }
+
+    return file_descriptor.indexes[curr_block_index + 1];
+}
+
+bool OFTEntry::moveToNextBlock(bool load_prev_to_disk)
+{
+    size_t next_block = getNextBlock();
+    if (next_block == -1)
+    {
+        return false;
+    }
+    if (load_prev_to_disk)
+    {
+        iosystem->write_block(cur_block, buffer);
+    }
+    cur_block = next_block;
+    cur_pos = 0;
+    updateBuffer();
+    return true;
+}
+
+size_t OFTEntry::getLengthByCurPos()
+{
+    int curr_block_index = getCurrBlockIndex();
+
+    return curr_block_index * Disk::BLOCK_SIZE + cur_pos;
+}
+
+size_t OFTEntry::writeToBuffer(const char* mem_area, size_t count)
+{
+    // if cur_pos on end of file
+    if (cur_pos == Disk::BLOCK_SIZE)
+    {
+        return 0;
+    }
+
+    // read actual block to buffer
     if (is_buffer_changed)
     {
         iosystem->write_block(changed_block, buffer);
         updateBuffer();
     }
-    return buffer;
+
+    int number_of_written = 0;
+    for (int i = 0; i < count; i++)
+    {
+        if (i == sizeof(mem_area))
+        {
+            // reached end of array
+            number_of_written = i;
+            break;
+        }
+
+        buffer[cur_pos] = mem_area[i];
+
+        ++cur_pos;
+        // reached end of block
+        if (cur_pos == Disk::BLOCK_SIZE)
+        {
+            bool block_updated = moveToNextBlock(true);
+            // reached end of file
+            if (!block_updated)
+            {
+                number_of_written = i;
+                break;
+            }
+        }
+    }
+    if (number_of_written == 0)
+    {
+        number_of_written = count;
+    }
+    changed_block = cur_block;
+    file_descriptor.file_length = getLengthByCurPos();
+    return number_of_written;
+}
+
+const char* OFTEntry::readFromBuffer(size_t count)
+{
+    // if cur_pos on end of file
+    if (cur_pos == Disk::BLOCK_SIZE)
+    {
+        return new char[0];
+    }
+
+    if (is_buffer_changed)
+    {
+        iosystem->write_block(changed_block, buffer);
+        updateBuffer();
+    }
+
+    std::vector<char> result;
+    result.reserve(count);
+    for (int i = 0; i < count; i++)
+    {
+        result.push_back(buffer[cur_pos]);
+
+        ++cur_pos;
+        // reached end of block
+        if (cur_pos == Disk::BLOCK_SIZE)
+        {
+            bool block_updated = moveToNextBlock(false);
+            // reached end of file
+            if (!block_updated)
+            {
+                break;
+            }
+        }
+    }
+
+    char* result_arr = new char[result.size()];
+    for (int i = 0; i < result.size(); i++)
+    {
+        result_arr[i] = result[i];
+    }
+    return result_arr;
 }
 
 void OFTEntry::updateBuffer()
@@ -36,10 +148,11 @@ void OFTEntry::updateBuffer()
 
 void OFTEntry::setPosition(size_t new_pos)
 {
-    cur_pos = new_pos % (Disk::BLOCK_SIZE * cur_block);
-    if (file_descriptor.indexes[new_pos % Disk::BLOCK_SIZE] != cur_block)
+    cur_pos = new_pos % Disk::BLOCK_SIZE;
+    if (file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE] != cur_block)
     {
-        cur_block = file_descriptor.indexes[new_pos % Disk::BLOCK_SIZE];
+        is_buffer_changed = true;
+        cur_block = file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE];
     }
 }
 
@@ -55,8 +168,18 @@ void OFTEntry::onClose()
     }
 }
 
-bool OFTEntry::isEmpty()
+bool OFTEntry::isEmpty() const
 {
-    return file_descriptor.indexes[0] == -1;
+    return descriptor_index == -1;
+}
+
+size_t OFTEntry::getDescriptorIndex() const
+{
+    return descriptor_index;
+}
+
+Entity::FileDescriptor OFTEntry::getDescriptor()
+{
+    return file_descriptor;
 }
 }; // namespace FS
