@@ -102,7 +102,7 @@ void Directories::reset()
     {
         loadDirectories();
     }
-    for (size_t index = 0; index < data.size(); ++index)
+    for (size_t index = 0; index < size(); ++index)
     {
         data[index] = {-1, {}};
     }

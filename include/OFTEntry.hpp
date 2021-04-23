@@ -30,7 +30,7 @@ public:
 private:
     char buffer[Disk::BLOCK_SIZE];
     size_t cur_pos = 0;
-    size_t descriptor_index;
+    size_t descriptor_index = -1;
     Entity::FileDescriptor file_descriptor;
     size_t changed_block;
     size_t cur_block;

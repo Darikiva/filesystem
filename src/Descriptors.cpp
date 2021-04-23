@@ -115,7 +115,7 @@ void Descriptors::reset()
     }
     Entity::FileDescriptor directory_desc = {0, {0, -1, -1}};
     data[0] = directory_desc;
-    for (size_t index = 1; index < data.size(); ++index)
+    for (size_t index = 1; index < size(); ++index)
     {
         data[index] = {0, {-1, -1, -1}};
     }

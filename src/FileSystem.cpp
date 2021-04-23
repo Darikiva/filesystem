@@ -46,7 +46,7 @@ Status FileSystem::create(const std::string& file_name)
     }
 
     int dir_index = -1;
-    for (size_t i = directories.size() - 1; i >= 0; i--)
+    for (int i = directories.size() - 1; i >= 0; i--)
     {
         auto data = directories.get(i);
         if (data.descriptor_index == -1)
@@ -96,11 +96,18 @@ Status FileSystem::create(const std::string& file_name)
         return Status::NoSpace;
     }
 
-    Entity::FileDescriptor directory_desc = {0, *free_blocks_indexes};
+    Entity::FileDescriptor directory_desc = {0,
+                                             free_blocks_indexes[0],
+                                             free_blocks_indexes[1],
+                                             free_blocks_indexes[2]};
     descriptors.set(desc_index, directory_desc);
 
     char name_char[4]{file_name.at(0), file_name.at(1), file_name.at(2), file_name.at(3)};
-    Entity::DirectoryEntry directory_entry = {desc_index, *name_char};
+    Entity::DirectoryEntry directory_entry = {desc_index,
+                                              name_char[0],
+                                              name_char[1],
+                                              name_char[2],
+                                              name_char[3]};
     directories.set(dir_index, directory_entry);
     return Status::Success;
 }
@@ -194,6 +201,7 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
         if (oft.get(i)->isEmpty())
         {
             oft_index = i;
+            break;
         }
     }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bitset>
-#include <boost/optional.hpp>
 #include <fstream>
 #include <string>
 
