@@ -30,67 +30,81 @@ void FileSystem::reset()
 void FileSystem::create(const std::string& file_name)
 {
     std::int8_t desc_index = -1;
-    for (int i = 0; i < descriptors.size(); i++) {
+    for (int i = 0; i < descriptors.size(); i++)
+    {
         auto data = descriptors.get(i);
-        if (data.indexes[0] == -1) {
+        if (data.indexes[0] == -1)
+        {
             desc_index = i;
             break;
         }
     }
 
-    if (desc_index == -1) {
-        //throw some exception
+    if (desc_index == -1)
+    {
+        // throw some exception
         return;
     }
 
     int dir_index = -1;
-    for (auto i = directories.size() - 1; i >= 0 ; i--) {
+    for (auto i = directories.size() - 1; i >= 0; i--)
+    {
         auto data = directories.get(i);
-        if (data.descriptor_index == -1) {
+        if (data.descriptor_index == -1)
+        {
             dir_index = i;
-        } else {
+        }
+        else
+        {
             bool same_names = true;
-            for (int j = 0; j < 4; j++) {
-                if (data.file_name[j] != file_name.at(j)) {
+            for (int j = 0; j < 4; j++)
+            {
+                if (data.file_name[j] != file_name.at(j))
+                {
                     same_names = false;
                 }
             }
-            if (same_names) {
-                //throw error
+            if (same_names)
+            {
+                // throw error
                 return;
             }
         }
     }
 
-    if (dir_index == -1) {
-        //throw some exception
+    if (dir_index == -1)
+    {
+        // throw some exception
         return;
     }
 
-    //free blocks
+    // free blocks
 
     std::int8_t free_blocks_indexes[3] = {-1, -1, -1};
     int number_of_found = 0;
-    for (int i = 0; i < bitmap.size(); i++) {
-        if (number_of_found == 3) {
+    for (int i = 0; i < bitmap.size(); i++)
+    {
+        if (number_of_found == 3)
+        {
             break;
         }
-        if (!bitmap.get(i)) {
+        if (!bitmap.get(i))
+        {
             free_blocks_indexes[number_of_found] = i;
             ++number_of_found;
         }
     }
 
-    if (number_of_found != 3) {
-        //throw exception
+    if (number_of_found != 3)
+    {
+        // throw exception
         return;
     }
 
     Entity::FileDescriptor directory_desc = {0, *free_blocks_indexes};
     descriptors.set(desc_index, directory_desc);
 
-    char name_char[4] {file_name.at(0), file_name.at(1),
-                        file_name.at(2), file_name.at(3)};
+    char name_char[4]{file_name.at(0), file_name.at(1), file_name.at(2), file_name.at(3)};
     Entity::DirectoryEntry directory_entry = {desc_index, *name_char};
     directories.set(dir_index, directory_entry);
 }
@@ -106,15 +120,19 @@ void FileSystem::create(const std::string& file_name)
 void FileSystem::destroy(const std::string& file_name)
 {
     int desc_index = -1;
-    for (auto i = 0; i < directories.size() ; i++) {
+    for (auto i = 0; i < directories.size(); i++)
+    {
         auto data = directories.get(i);
         bool same_names = true;
-        for (int j = 0; j < 4; j++) {
-            if (data.file_name[j] != file_name.at(j)) {
+        for (int j = 0; j < 4; j++)
+        {
+            if (data.file_name[j] != file_name.at(j))
+            {
                 same_names = false;
             }
         }
-        if (same_names) {
+        if (same_names)
+        {
             desc_index = data.descriptor_index;
             char empty_name[4] = {};
             Entity::DirectoryEntry empty_entry = {-1, *empty_name};
@@ -124,7 +142,8 @@ void FileSystem::destroy(const std::string& file_name)
     }
 
     auto desc = descriptors.get(desc_index);
-    for (signed char index : desc.indexes) {
+    for (signed char index : desc.indexes)
+    {
         bitmap.set(index, false);
     }
 
@@ -142,35 +161,44 @@ void FileSystem::destroy(const std::string& file_name)
  */
 size_t FileSystem::open(const std::string& file_name)
 {
+    //search directories for file and get descriptor index
     int desc_index = -1;
-    for (auto i = 0; i < directories.size() ; i++) {
+    for (auto i = 0; i < directories.size(); i++)
+    {
         auto data = directories.get(i);
         bool same_names = true;
-        for (int j = 0; j < 4; j++) {
-            if (data.file_name[j] != file_name.at(j)) {
+        for (int j = 0; j < 4; j++)
+        {
+            if (data.file_name[j] != file_name.at(j))
+            {
                 same_names = false;
             }
         }
-        if (same_names) {
+        if (same_names)
+        {
             desc_index = data.descriptor_index;
             break;
         }
     }
 
+    //find free oft
     int oft_index = -1;
-    for (int i = 0; i < oft.size(); i++) {
-        if (oft.get(i).isEmpty()) {
+    for (int i = 0; i < oft.size(); i++)
+    {
+        if (oft.get(i)->isEmpty())
+        {
             oft_index = i;
         }
     }
 
-    if (oft_index == -1) {
-        //throw some exception
+    if (oft_index == -1)
+    {
+        // throw some exception
         return -1;
     }
 
-    oft.set(oft_index, OFTEntry(
-                           descriptors.get(desc_index), oft.getIoSystem()));
+    oft.set(oft_index,
+            OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
 
     return oft_index;
 }
@@ -178,33 +206,104 @@ size_t FileSystem::open(const std::string& file_name)
 /**
  *
  * 1) write buffer to disk +
- * 2) update file_length of descriptor TODO
+ * 2) update file_length of descriptor +
  * 3) free OWT entry +
  */
 void FileSystem::close(size_t index)
 {
-     oft.get(index).onClose();
-     //TODO file_length
-     oft.set(index, oft.emptyOFTEntry);
+    OFTEntry* oft_entry = oft.get(index);
+
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    oft_entry->onClose();
+    descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
+    oft.set(index, oft.emptyOFTEntry);
 }
 
 void FileSystem::read(size_t index, char* mem_area, size_t count)
 {
+    OFTEntry* oft_entry = oft.get(index);
 
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    const char* read_chars = oft_entry->readFromBuffer(count);
+    for (int i = 0; i < sizeof(read_chars); i++)
+    {
+        if (sizeof(mem_area) == i)
+        {
+            // throw reach mem_area end
+            break;
+        }
+
+        mem_area[i] = read_chars[i];
+    }
+
+    if (sizeof(read_chars) != count)
+    {
+        // throw reach end of file
+    }
+    else
+    {
+        // successful status
+    }
 }
 
 void FileSystem::write(size_t index, char* mem_area, size_t count)
 {
+    OFTEntry* oft_entry = oft.get(index);
 
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
+
+    if (number_of_written != count)
+    {
+        // throw reach end of file
+    }
+    else
+    {
+        // successful status
+    }
 }
 
 void FileSystem::lseek(size_t index, size_t pos)
 {
-    if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1) {
-        //throw some exception
+    if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
+    {
+        // throw some exception
         return;
     }
-    oft.get(index).setPosition(pos);
+    oft.get(index)->setPosition(pos);
 }
 
 std::unordered_map<std::string, size_t> FileSystem::directory()

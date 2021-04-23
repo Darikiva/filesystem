@@ -15,7 +15,7 @@ IOSystem* OFT::getIoSystem() const
     return iosystem;
 }
 
-OFTEntry OFT::get(std::size_t index)
+OFTEntry* OFT::get(std::size_t index)
 {
     if (first_use)
     {
@@ -24,7 +24,11 @@ OFTEntry OFT::get(std::size_t index)
         }
         first_use = false;
     }
-    return data[index];
+    if (index < data.size())
+    {
+        return &data[index];
+    }
+    return nullptr;
 }
 
 void OFT::set(size_t index, const OFTEntry& value)
