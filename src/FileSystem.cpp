@@ -96,18 +96,13 @@ Status FileSystem::create(const std::string& file_name)
         return Status::NoSpace;
     }
 
-    Entity::FileDescriptor directory_desc = {0,
-                                             free_blocks_indexes[0],
-                                             free_blocks_indexes[1],
-                                             free_blocks_indexes[2]};
+    Entity::FileDescriptor directory_desc = {
+        0, free_blocks_indexes[0], free_blocks_indexes[1], free_blocks_indexes[2]};
     descriptors.set(desc_index, directory_desc);
 
     char name_char[4]{file_name.at(0), file_name.at(1), file_name.at(2), file_name.at(3)};
-    Entity::DirectoryEntry directory_entry = {desc_index,
-                                              name_char[0],
-                                              name_char[1],
-                                              name_char[2],
-                                              name_char[3]};
+    Entity::DirectoryEntry directory_entry = {
+        desc_index, name_char[0], name_char[1], name_char[2], name_char[3]};
     directories.set(dir_index, directory_entry);
     return Status::Success;
 }
@@ -245,21 +240,20 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
         return std::pair<Status, int>(Status::NotFound, 0);
     }
 
-    const char* read_chars = oft_entry->readFromBuffer(count);
-    for (size_t i = 0; i < sizeof(read_chars); i++)
+    auto read_result = oft_entry->readFromBuffer(count);
+    for (size_t i = 0; i < read_result.second; i++)
     {
         if (sizeof(mem_area) == i)
         {
             return std::pair<Status, int>(Status::OutputArrIndexOutOfBounds, i);
-            break;
         }
 
-        mem_area[i] = read_chars[i];
+        mem_area[i] = *(read_result.first + i);
     }
 
-    if (sizeof(read_chars) != count)
+    if (read_result.second != count)
     {
-        return std::pair<Status, int>(Status::EndOfFile, sizeof(read_chars));
+        return std::pair<Status, int>(Status::EndOfFile, read_result.second);
     }
     else
     {
@@ -301,7 +295,8 @@ Status FileSystem::lseek(size_t index, size_t pos)
 std::unordered_map<std::string, int8_t> FileSystem::directory()
 {
     std::unordered_map<std::string, int8_t> directory_map;
-    for(size_t i = 0; i < directories.size(); i++) {
+    for (size_t i = 0; i < directories.size(); i++)
+    {
         auto directory = directories.get(i);
         directory_map[directory.file_name] = directory.descriptor_index;
     }

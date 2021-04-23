@@ -61,6 +61,7 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     if (is_buffer_empty)
     {
         updateBuffer();
+        is_buffer_empty = false;
     }
     // read actual block to buffer
     if (is_buffer_changed)
@@ -89,7 +90,7 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
             // reached end of file
             if (!block_updated)
             {
-                number_of_written = i;
+                number_of_written = i + 1;
                 break;
             }
         }
@@ -103,17 +104,18 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     return number_of_written;
 }
 
-const char* OFTEntry::readFromBuffer(int count)
+std::pair<const char*, int> OFTEntry::readFromBuffer(int count)
 {
     // if cur_pos on end of file
     if (cur_pos == Disk::BLOCK_SIZE)
     {
-        return new char[0];
+        return std::pair<const char*, int>(new char[0], 0);
     }
 
     if (is_buffer_empty)
     {
         updateBuffer();
+        is_buffer_empty = false;
     }
 
     if (is_buffer_changed)
@@ -122,11 +124,12 @@ const char* OFTEntry::readFromBuffer(int count)
         updateBuffer();
     }
 
-    std::vector<char> result;
-    result.reserve(count);
+    char* result_arr = new char[count];
+    int number_of_read = 0;
     for (size_t i = 0; i < count; i++)
     {
-        result.push_back(buffer[cur_pos]);
+        result_arr[i] = buffer[cur_pos];
+        ++number_of_read;
 
         ++cur_pos;
         // reached end of block
@@ -141,12 +144,7 @@ const char* OFTEntry::readFromBuffer(int count)
         }
     }
 
-    char* result_arr = new char[result.size()];
-    for (size_t i = 0; i < result.size(); i++)
-    {
-        result_arr[i] = result[i];
-    }
-    return result_arr;
+    return std::pair<const char*, int>(result_arr, number_of_read);
 }
 
 void OFTEntry::updateBuffer()

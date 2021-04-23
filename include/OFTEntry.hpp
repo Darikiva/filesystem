@@ -20,7 +20,7 @@ public:
         changed_block = cur_block;
     }
     int writeToBuffer(const char* mem_area, int count);
-    const char* readFromBuffer(int count);
+    std::pair<const char*, int> readFromBuffer(int count);
     void setPosition(size_t new_pos);
     void onClose();
     bool isEmpty() const;
