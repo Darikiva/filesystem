@@ -19,8 +19,8 @@ public:
         cur_block = file_descriptor.indexes[0];
         changed_block = cur_block;
     }
-    size_t writeToBuffer(const char* mem_area, size_t count);
-    const char* readFromBuffer(size_t count);
+    int writeToBuffer(const char* mem_area, int count);
+    const char* readFromBuffer(int count);
     void setPosition(size_t new_pos);
     void onClose();
     bool isEmpty() const;
@@ -36,6 +36,7 @@ private:
     size_t cur_block;
     IOSystem* iosystem;
     bool is_buffer_changed = false;
+    bool is_buffer_empty = true;
     void updateBuffer();
     size_t getCurrBlockIndex();
     size_t getNextBlock();

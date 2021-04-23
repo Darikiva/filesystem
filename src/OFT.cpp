@@ -1,6 +1,8 @@
-#include "Descriptors.hpp"
 #include "OFT.hpp"
+
 #include <iostream>
+
+#include "Descriptors.hpp"
 
 namespace FS {
 
@@ -19,7 +21,8 @@ OFTEntry* OFT::get(std::size_t index)
 {
     if (first_use)
     {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
+        {
             data.push_back(emptyOFTEntry);
         }
         first_use = false;
@@ -35,7 +38,8 @@ void OFT::set(size_t index, const OFTEntry& value)
 {
     if (first_use)
     {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
+        {
             data.push_back(emptyOFTEntry);
         }
         first_use = false;
@@ -45,12 +49,11 @@ void OFT::set(size_t index, const OFTEntry& value)
 
 void OFT::reset()
 {
-    for(int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++)
+    {
         data.push_back(emptyOFTEntry);
     }
 }
 
-OFT::~OFT()
-{
-}
+OFT::~OFT() {}
 } // namespace FS
