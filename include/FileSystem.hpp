@@ -10,6 +10,9 @@
 #include "IOSystem.hpp"
 #include "OFT.hpp"
 #include "OFTEntry.hpp"
+#include "EnumMacros.hpp"
+
+DECLARE_ENUM(Status, Success, Error)
 
 namespace FS {
 
@@ -18,8 +21,8 @@ class FileSystem
 public:
     FileSystem(IOSystem& iosystem);
     void reset();
-    void create(const std::string& file_name);
-    void destroy(const std::string& file_name);
+    Status create(const std::string& file_name);
+    Status destroy(const std::string& file_name);
     size_t open(const std::string& file_name);
     void close(size_t index);
     void read(size_t index, char* mem_area, size_t count);

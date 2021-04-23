@@ -18,8 +18,7 @@ public:
     void reset();
     inline size_t size() const { return data.size(); }
     IOSystem* getIoSystem() const;
-    OFTEntry emptyOFTEntry = OFTEntry(
-        Entity::FileDescriptor{0, {-1,-1,-1}}, iosystem);
+    OFTEntry emptyOFTEntry = OFTEntry(Entity::FileDescriptor{0, {-1, -1, -1}}, iosystem);
 
 private:
     std::vector<OFTEntry> data;

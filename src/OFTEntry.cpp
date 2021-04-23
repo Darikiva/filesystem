@@ -9,7 +9,7 @@ void OFTEntry::setBuffer(const char* new_buffer)
         iosystem->write_block(changed_block, buffer);
     }
 
-    //TODO CARRYOVER
+    // TODO CARRYOVER
     for (int i = cur_pos; i < sizeof(new_buffer) + cur_pos && i < Disk::BLOCK_SIZE; i++)
     {
         buffer[i] = new_buffer[i];

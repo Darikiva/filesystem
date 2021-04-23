@@ -10,7 +10,6 @@ namespace FS {
 IOSystem::IOSystem(Disk& disk)
     : disk{disk}
 {
-
 }
 
 void IOSystem::read_block(std::size_t i, char* p)
@@ -30,6 +29,5 @@ void IOSystem::write_block(std::size_t i, char* p)
         destination[j] = p[j];
     }
 }
-
 
 } // namespace FS

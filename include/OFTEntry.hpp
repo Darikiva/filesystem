@@ -12,7 +12,7 @@ class OFTEntry
 {
 public:
     OFTEntry(Entity::FileDescriptor file_descriptor, IOSystem* iosystem)
-        : file_descriptor(file_descriptor),iosystem(iosystem)
+        : file_descriptor(file_descriptor, iosystem(iosystem)
     {
         cur_block = file_descriptor.indexes[0];
         changed_block = cur_block;

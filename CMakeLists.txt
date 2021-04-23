@@ -12,8 +12,12 @@ include_directories(${SRC_DIR})
 
 file(GLOB_RECURSE FILESYSTEM_SRC *.cpp)
 
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
 add_library(Wow STATIC ${FILESYSTEM_SRC})
 set_target_properties(Wow PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(main main.cpp)
+add_executable(main main.cpp include/EnumMacros.hpp)
 target_link_libraries(main PRIVATE Wow)
