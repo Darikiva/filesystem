@@ -159,8 +159,9 @@ Status FileSystem::destroy(const std::string& file_name)
  * 4) read the first block of file into the buffer[] +
  * 5) return OFT index (error status) +
  */
-size_t FileSystem::open(const std::string& file_name) // TODO ENUM VS RETURN OFT INDEX
+size_t FileSystem::open(const std::string& file_name)
 {
+    //search directories for file and get descriptor index
     int desc_index = -1;
     for (auto i = 0; i < directories.size(); i++)
     {
@@ -180,10 +181,11 @@ size_t FileSystem::open(const std::string& file_name) // TODO ENUM VS RETURN OFT
         }
     }
 
+    //find free oft
     int oft_index = -1;
     for (int i = 0; i < oft.size(); i++)
     {
-        if (oft.get(i).isEmpty())
+        if (oft.get(i)->isEmpty())
         {
             oft_index = i;
         }
@@ -195,7 +197,8 @@ size_t FileSystem::open(const std::string& file_name) // TODO ENUM VS RETURN OFT
         return -1;
     }
 
-    oft.set(oft_index, OFTEntry(descriptors.get(desc_index), oft.getIoSystem()));
+    oft.set(oft_index,
+            OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
 
     return oft_index;
 }
@@ -203,19 +206,95 @@ size_t FileSystem::open(const std::string& file_name) // TODO ENUM VS RETURN OFT
 /**
  *
  * 1) write buffer to disk +
- * 2) update file_length of descriptor TODO
+ * 2) update file_length of descriptor +
  * 3) free OWT entry +
  */
 void FileSystem::close(size_t index)
 {
-    oft.get(index).onClose();
-    // TODO file_length
+    OFTEntry* oft_entry = oft.get(index);
+
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    oft_entry->onClose();
+    descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
     oft.set(index, oft.emptyOFTEntry);
 }
 
-void FileSystem::read(size_t index, char* mem_area, size_t count) {}
+void FileSystem::read(size_t index, char* mem_area, size_t count)
+{
+    OFTEntry* oft_entry = oft.get(index);
 
-void FileSystem::write(size_t index, char* mem_area, size_t count) {}
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    const char* read_chars = oft_entry->readFromBuffer(count);
+    for (int i = 0; i < sizeof(read_chars); i++)
+    {
+        if (sizeof(mem_area) == i)
+        {
+            // throw reach mem_area end
+            break;
+        }
+
+        mem_area[i] = read_chars[i];
+    }
+
+    if (sizeof(read_chars) != count)
+    {
+        // throw reach end of file
+    }
+    else
+    {
+        // successful status
+    }
+}
+
+void FileSystem::write(size_t index, char* mem_area, size_t count)
+{
+    OFTEntry* oft_entry = oft.get(index);
+
+    if (oft_entry == nullptr)
+    {
+        // throw exception
+        return;
+    }
+
+    if (oft_entry->isEmpty())
+    {
+        // throw exception
+        return;
+    }
+
+    size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
+
+    if (number_of_written != count)
+    {
+        // throw reach end of file
+    }
+    else
+    {
+        // successful status
+    }
+}
 
 void FileSystem::lseek(size_t index, size_t pos)
 {
@@ -224,7 +303,7 @@ void FileSystem::lseek(size_t index, size_t pos)
         // throw some exception
         return;
     }
-    oft.get(index).setPosition(pos);
+    oft.get(index)->setPosition(pos);
 }
 
 std::unordered_map<std::string, size_t> FileSystem::directory()
