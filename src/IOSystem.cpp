@@ -1,9 +1,6 @@
 #include "IOSystem.hpp"
 
-#include <bitset>
 #include <cwchar>
-#include <fstream>
-#include <iostream>
 
 namespace FS {
 
@@ -29,6 +26,5 @@ void IOSystem::write_block(std::size_t i, char* p)
         destination[j] = p[j];
     }
 }
-
 
 } // namespace FS

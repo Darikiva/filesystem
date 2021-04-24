@@ -9,7 +9,7 @@ Disk::Disk(std::string save_name)
     : save_name{save_name}
 {
     ldisk = new char[BLOCKS_AMOUNT][BLOCK_SIZE];
-    std::ifstream in(save_name, std::ios::binary | std::ios::in);
+    std::ifstream in(save_name, std::ios::in);
     for (std::size_t index = 0; index < BLOCKS_AMOUNT; ++index)
     {
         in.read(ldisk[index], BLOCK_SIZE);

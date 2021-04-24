@@ -1,6 +1,8 @@
 #include "Descriptors.hpp"
-#include "Entities.hpp"
+
 #include <iostream>
+
+#include "Entities.hpp"
 
 namespace FS {
 
@@ -89,11 +91,10 @@ void Descriptors::unloadDescriptor(size_t index)
             : (index - (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size) /
                       (Disk::BLOCK_SIZE / descriptor_size) +
                   1;
-    size_t byte =
-        index <= (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size
-            ? Disk::BITMAP_SIZE_BYTES + index * descriptor_size
-            : (index - (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size) %
-                  (Disk::BLOCK_SIZE / descriptor_size) * descriptor_size;
+    size_t byte = index <= (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size
+                      ? Disk::BITMAP_SIZE_BYTES + index * descriptor_size
+                      : (index - (Disk::BLOCK_SIZE - Disk::BITMAP_SIZE_BYTES) / descriptor_size) %
+                            (Disk::BLOCK_SIZE / descriptor_size) * descriptor_size;
     char* buffer = new char[Disk::BLOCK_SIZE];
     iosystem.read_block(row, buffer);
     auto ch_p = reinterpret_cast<char*>(&data[index]);
@@ -114,7 +115,7 @@ void Descriptors::reset()
     }
     Entity::FileDescriptor directory_desc = {0, {0, -1, -1}};
     data[0] = directory_desc;
-    for (size_t index = 1; index < data.size(); ++index)
+    for (size_t index = 1; index < size(); ++index)
     {
         data[index] = {0, {-1, -1, -1}};
     }

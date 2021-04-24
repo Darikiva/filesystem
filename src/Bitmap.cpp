@@ -112,12 +112,12 @@ void Bitmap::unloadBitmap()
         }
         ++curr_pos;
         if (curr_pos >= Disk::BITMAP_SIZE_BITS)
-            {
-                buffer[index] = a;
-                iosystem.write_block(last_block_index, buffer);
-                delete[] buffer;
-                return;
-            }
+        {
+            buffer[index] = a;
+            iosystem.write_block(last_block_index, buffer);
+            delete[] buffer;
+            return;
+        }
         buffer[index] = a;
     }
     iosystem.write_block(last_block_index, buffer);

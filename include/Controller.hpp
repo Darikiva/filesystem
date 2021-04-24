@@ -32,6 +32,7 @@ public:
     Controller(std::string save_name);
     void reset();
     void parse(std::string command);
+    std::unique_ptr<FileSystem> filesystem;
 
 private:
     Command convert(std::string str);
@@ -39,7 +40,7 @@ private:
 private:
     std::unique_ptr<Disk> disk;
     std::unique_ptr<IOSystem> iosystem;
-    std::unique_ptr<FileSystem> filesystem;
+
 };
 
 } // namespace FS

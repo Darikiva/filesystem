@@ -15,5 +15,5 @@ file(GLOB_RECURSE FILESYSTEM_SRC *.cpp)
 add_library(Wow STATIC ${FILESYSTEM_SRC})
 set_target_properties(Wow PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(main main.cpp)
+add_executable(main main.cpp include/EnumMacros.hpp)
 target_link_libraries(main PRIVATE Wow)
