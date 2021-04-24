@@ -48,11 +48,14 @@ void Controller::work(std::istream& in, std::ostream& out)
     while (std::getline(in, buffer))
     {
         auto args = Utils::split(buffer);
-        out << parse(args);
+        auto wow = parseCommand(args);
+        if (wow == "exit")
+            return;
+        out << wow;
     }
 }
 
-std::string Controller::parse(std::vector<std::string> args)
+std::string Controller::parseCommand(std::vector<std::string> args)
 {
     std::string output = "Error";
     if (args.empty()) return output;
@@ -69,18 +72,28 @@ std::string Controller::parse(std::vector<std::string> args)
             case Command::Create: {
                 std::string filename = args[1];
                 Utils::lengthen(filename);
-                if (filesystem->create(filename) == FS::Status::Success)
+                auto res = filesystem->create(filename);
+                if (res == FS::Status::Success)
                 {
                     output = "file " + filename + " created";
+                }
+                else
+                {
+                    output = toString(res);
                 }
             }
             break;
             case Command::Destroy: {
                 std::string filename = args[1];
                 Utils::lengthen(filename);
-                if (filesystem->destroy(filename) == FS::Status::Success)
+                auto res = filesystem->destroy(filename);
+                if (res == FS::Status::Success)
                 {
                     output = "file " + filename + " destroyed";
+                }
+                else
+                {
+                    output = toString(res);
                 }
             }
             break;
@@ -92,13 +105,22 @@ std::string Controller::parse(std::vector<std::string> args)
                 {
                     output = "file " + filename + " opened, index = " + std::to_string(res.second);
                 }
+                else
+                {
+                    output = toString(res.first);
+                }
             }
             break;
             case Command::Close: {
                 int index = std::atoi(args[1].c_str());
-                if (filesystem->close(index) == FS::Status::Success)
+                auto res = filesystem->close(index);
+                if (res == FS::Status::Success)
                 {
                     output = "file " + std::to_string(index) + " closed";
+                }
+                else
+                {
+                    output = toString(res);
                 }
             }
             break;
@@ -113,7 +135,7 @@ std::string Controller::parse(std::vector<std::string> args)
                 }
                 else
                 {
-                    std::cout << "WOW: " << (int)res.first;
+                    output = toString(res.first);
                 }
             }
             break;
@@ -129,16 +151,21 @@ std::string Controller::parse(std::vector<std::string> args)
                 }
                 else
                 {
-                    std::cout << "WOW: " << (int)res.first;
+                    output = toString(res.first);
                 }
             }
             break;
             case Command::Seek: {
                 int index = std::atoi(args[1].c_str());
                 int pos = std::atoi(args[2].c_str());
-                if (filesystem->lseek(index, pos) == FS::Status::Success)
+                auto res = filesystem->lseek(index, pos);
+                if (res.first == FS::Status::Success)
                 {
-                    output = "current position is " + std::to_string(pos);
+                    output = "current position is " + std::to_string(res.second);
+                }
+                else
+                {
+                    output = toString(res.first);
                 }
             }
             break;
@@ -155,6 +182,10 @@ std::string Controller::parse(std::vector<std::string> args)
             }
             break;
         }
+    }
+    else
+    {
+        return "exit";
     }
     output += '\n';
     return output;

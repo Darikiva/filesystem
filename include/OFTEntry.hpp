@@ -20,8 +20,8 @@ public:
         changed_block = cur_block;
     }
     int writeToBuffer(const char* mem_area, int count);
-    std::pair<const char*, int> readFromBuffer(int count);
-    void setPosition(size_t new_pos);
+    std::pair<std::string, int> readFromBuffer(int count);
+    size_t setPosition(size_t new_pos);
     void onClose();
     bool isEmpty() const;
     size_t getDescriptorIndex() const;

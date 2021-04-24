@@ -243,12 +243,7 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
     auto read_result = oft_entry->readFromBuffer(count);
     for (size_t i = 0; i < read_result.second; i++)
     {
-        if (sizeof(mem_area) == i)
-        {
-            return std::pair<Status, int>(Status::OutputArrIndexOutOfBounds, i);
-        }
-
-        mem_area[i] = *(read_result.first + i);
+        mem_area[i] =read_result.first[i];
     }
 
     if (read_result.second != count)
@@ -282,14 +277,14 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
     }
 }
 
-Status FileSystem::lseek(size_t index, size_t pos)
+std::pair<Status, size_t> FileSystem::lseek(size_t index, size_t pos)
 {
     if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
     {
-        return Status::PositionOutOfBounds;
+        return {Status::PositionOutOfBounds, -1};
     }
-    oft.get(index)->setPosition(pos);
-    return Status::Success;
+    auto cur_pos = oft.get(index)->setPosition(pos);
+    return {Status::Success, cur_pos};
 }
 
 std::unordered_map<std::string, int8_t> FileSystem::directory()

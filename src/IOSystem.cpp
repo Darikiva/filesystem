@@ -1,5 +1,6 @@
 #include "IOSystem.hpp"
 
+#include <iostream>
 #include <cwchar>
 
 namespace FS {
@@ -18,10 +19,10 @@ void IOSystem::read_block(std::size_t i, char* p)
     }
 }
 
-void IOSystem::write_block(std::size_t i, char* p)
+void IOSystem::write_block(size_t i, char* p)
 {
     char* destination = disk.ldisk[i];
-    for (std::size_t j = 0; j < Disk::BLOCK_SIZE; ++j)
+    for (size_t j = 0; j < Disk::BLOCK_SIZE; ++j)
     {
         destination[j] = p[j];
     }

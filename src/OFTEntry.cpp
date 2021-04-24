@@ -1,5 +1,7 @@
 #include "OFTEntry.hpp"
 
+#include <algorithm>
+
 namespace FS {
 
 size_t OFTEntry::getCurrBlockIndex()
@@ -73,13 +75,6 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     int number_of_written = 0;
     for (size_t i = 0; i < count; i++)
     {
-        if (i == sizeof(mem_area))
-        {
-            // reached end of array
-            number_of_written = i;
-            break;
-        }
-
         buffer[cur_pos] = mem_area[i];
 
         ++cur_pos;
@@ -104,12 +99,12 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     return number_of_written;
 }
 
-std::pair<const char*, int> OFTEntry::readFromBuffer(int count)
+std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
 {
     // if cur_pos on end of file
     if (cur_pos == Disk::BLOCK_SIZE)
     {
-        return std::pair<const char*, int>(new char[0], 0);
+        return {std::string(), 0};
     }
 
     if (is_buffer_empty)
@@ -124,10 +119,14 @@ std::pair<const char*, int> OFTEntry::readFromBuffer(int count)
         updateBuffer();
     }
 
-    char* result_arr = new char[count];
+    std::string result_arr(count, ' ');
     int number_of_read = 0;
     for (size_t i = 0; i < count; i++)
     {
+        if (cur_pos >= file_descriptor.file_length)
+        {
+            break;
+        }
         result_arr[i] = buffer[cur_pos];
         ++number_of_read;
 
@@ -144,7 +143,7 @@ std::pair<const char*, int> OFTEntry::readFromBuffer(int count)
         }
     }
 
-    return std::pair<const char*, int>(result_arr, number_of_read);
+    return {result_arr, number_of_read};
 }
 
 void OFTEntry::updateBuffer()
@@ -153,14 +152,16 @@ void OFTEntry::updateBuffer()
     is_buffer_changed = false;
 }
 
-void OFTEntry::setPosition(size_t new_pos)
+size_t OFTEntry::setPosition(size_t new_pos)
 {
+    new_pos = new_pos > file_descriptor.file_length ? file_descriptor.file_length : new_pos;
     cur_pos = new_pos % Disk::BLOCK_SIZE;
     if (file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE] != cur_block)
     {
         is_buffer_changed = true;
         cur_block = file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE];
     }
+    return new_pos;
 }
 
 void OFTEntry::onClose()

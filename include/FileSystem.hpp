@@ -37,7 +37,7 @@ public:
     Status close(size_t index);
     std::pair<Status, int> read(size_t index, char* mem_area, int count);
     std::pair<Status, int> write(size_t index, char* mem_area, int count);
-    Status lseek(size_t index, size_t pos);
+    std::pair<Status, size_t> lseek(size_t index, size_t pos);
     std::unordered_map<std::string, int8_t> directory();
 
 private:

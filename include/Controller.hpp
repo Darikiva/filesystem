@@ -32,16 +32,16 @@ public:
 public:
     Controller(std::string save_name);
     void reset();
-    std::string parse(std::vector<std::string> args);
+    std::string parseCommand(std::vector<std::string> args);
     void work(std::istream& in, std::ostream& out);
-    std::unique_ptr<FileSystem> filesystem;
 
 private:
     auto convert(std::string str) -> std::pair<Controller::Command, int>;
 
-private:
+public:
     std::unique_ptr<Disk> disk;
     std::unique_ptr<IOSystem> iosystem;
+    std::unique_ptr<FileSystem> filesystem;
 };
 
 } // namespace FS
