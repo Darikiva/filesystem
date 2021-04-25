@@ -98,6 +98,7 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     {
         file_descriptor.file_length = new_length;
     }
+
     return number_of_written;
 }
 

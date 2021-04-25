@@ -152,6 +152,16 @@ Status FileSystem::destroy(const std::string& file_name)
 
     Entity::FileDescriptor empty_desc = {0, {-1, -1, -1}};
     descriptors.set(desc_index, empty_desc);
+
+    for (int i = 0; i < oft.size(); i++)
+    {
+        auto oft_entry = oft.get(i);
+        if (!oft_entry->isEmpty() && oft_entry->getDescriptorIndex() == desc_index)
+        {
+            oft.set(i, oft.emptyOFTEntry);
+            break;
+        }
+    }
     return Status::Success;
 }
 
@@ -244,7 +254,7 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
     auto read_result = oft_entry->readFromBuffer(count);
     for (size_t i = 0; i < read_result.second; i++)
     {
-        mem_area[i] =read_result.first[i];
+        mem_area[i] = read_result.first[i];
     }
 
     if (read_result.second != count)
@@ -267,6 +277,7 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
     }
 
     size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
+    descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
 
     if (number_of_written != count)
     {
@@ -294,7 +305,11 @@ std::unordered_map<std::string, int8_t> FileSystem::directory()
     for (size_t i = 0; i < directories.size(); i++)
     {
         auto directory = directories.get(i);
-        directory_map[directory.file_name] = directory.descriptor_index;
+        if (directory.descriptor_index != -1) {
+            std::int8_t descriptor_index = directory.descriptor_index;
+            auto file_length = descriptors.get(descriptor_index).file_length;
+            directory_map[directory.file_name] = file_length;
+        }
     }
     return directory_map;
 }
