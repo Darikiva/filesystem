@@ -49,8 +49,7 @@ void Controller::work(std::istream& in, std::ostream& out)
     {
         auto args = Utils::split(buffer);
         auto wow = parseCommand(args);
-        if (wow == "exit")
-            return;
+        if (wow == "exit") return;
         out << wow;
     }
 }
@@ -170,7 +169,7 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 output = "";
                 for (const auto& [filename, length] : filesystem->directory())
                 {
-                    output += filename + " " + std::to_string(length) + ", ";
+                    output += filename + " " + std::to_string(length) + "; ";
                 }
             }
             break;
