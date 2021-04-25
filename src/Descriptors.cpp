@@ -124,6 +124,9 @@ void Descriptors::reset()
 
 Descriptors::~Descriptors()
 {
-    unloadDescriptors();
+    // if (!first_use)
+    // {
+    //     unloadDescriptors();
+    // }
 }
 } // namespace FS

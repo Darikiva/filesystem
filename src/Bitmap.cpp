@@ -140,7 +140,10 @@ void Bitmap::reset()
 
 Bitmap::~Bitmap()
 {
-    unloadBitmap();
+    if (!first_use)
+    {
+        unloadBitmap();
+    }
 }
 
 } // namespace FS

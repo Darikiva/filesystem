@@ -1,7 +1,5 @@
 #include "OFTEntry.hpp"
 
-#include <algorithm>
-
 namespace FS {
 
 size_t OFTEntry::getCurrBlockIndex()
@@ -95,7 +93,11 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
         number_of_written = count;
     }
     changed_block = cur_block;
-    file_descriptor.file_length = getLengthByCurPos();
+    auto new_length = getLengthByCurPos();
+    if (new_length > file_descriptor.file_length)
+    {
+        file_descriptor.file_length = new_length;
+    }
     return number_of_written;
 }
 
@@ -123,7 +125,7 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
     int number_of_read = 0;
     for (size_t i = 0; i < count; i++)
     {
-        if (cur_pos >= file_descriptor.file_length)
+        if (getCurrBlockIndex() * Disk::BLOCK_SIZE + cur_pos >= file_descriptor.file_length)
         {
             break;
         }

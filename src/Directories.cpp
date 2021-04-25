@@ -1,6 +1,8 @@
 #include "Directories.hpp"
-#include "Entities.hpp"
+
 #include <iostream>
+
+#include "Entities.hpp"
 
 namespace FS {
 
@@ -79,7 +81,8 @@ void Directories::unloadDirectories()
 
 void Directories::unloadDirectory(size_t index)
 {
-    if (index <= Disk::BLOCK_SIZE / directory_size) {
+    if (index <= Disk::BLOCK_SIZE / directory_size)
+    {
         return;
     }
     const size_t row = Disk::K;
@@ -111,6 +114,9 @@ void Directories::reset()
 
 Directories::~Directories()
 {
-    unloadDirectories();
+    // if (!first_use)
+    // {
+    //     unloadDirectories();
+    // }
 }
 } // namespace FS

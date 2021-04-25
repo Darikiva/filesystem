@@ -86,7 +86,8 @@ Status FileSystem::create(const std::string& file_name)
         }
         if (!bitmap.get(i))
         {
-            free_blocks_indexes[number_of_found] = i;
+            bitmap.set(i, true);
+            free_blocks_indexes[number_of_found] = Disk::K + i;
             ++number_of_found;
         }
     }

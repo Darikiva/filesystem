@@ -129,13 +129,10 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 int count = std::atoi(args[2].c_str());
                 std::string mem_area(count, ' ');
                 auto res = filesystem->read(index, mem_area.data(), count);
-                if (res.first == FS::Status::Success)
+                output = std::to_string(res.second) + " bytes read: " + mem_area;
+                if (res.first != FS::Status::Success)
                 {
-                    output = std::to_string(count) + " bytes read: " + mem_area;
-                }
-                else
-                {
-                    output = toString(res.first);
+                    output += toString(res.first);
                 }
             }
             break;
