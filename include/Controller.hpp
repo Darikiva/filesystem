@@ -25,6 +25,7 @@ public:
         Seek,
         Directory,
         Save,
+        Quit,
         Invalid,
     };
     const static std::unordered_map<std::string, std::pair<Command, int>> str_to_command;
@@ -38,7 +39,7 @@ public:
 private:
     auto convert(std::string str) -> std::pair<Controller::Command, int>;
 
-public:
+private:
     std::unique_ptr<Disk> disk;
     std::unique_ptr<IOSystem> iosystem;
     std::unique_ptr<FileSystem> filesystem;
