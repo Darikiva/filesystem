@@ -299,9 +299,9 @@ std::pair<Status, size_t> FileSystem::lseek(size_t index, size_t pos)
     return {Status::Success, cur_pos};
 }
 
-std::unordered_map<std::string, int8_t> FileSystem::directory()
+std::unordered_map<std::string, uint8_t> FileSystem::directory()
 {
-    std::unordered_map<std::string, int8_t> directory_map;
+    std::unordered_map<std::string, uint8_t> directory_map;
     for (size_t i = 0; i < directories.size(); i++)
     {
         auto directory = directories.get(i);
