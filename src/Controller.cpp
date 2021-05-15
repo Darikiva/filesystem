@@ -6,6 +6,8 @@
 
 namespace FS {
 
+const std::string c_quit_str = "quit";
+
 const std::unordered_map<std::string, std::pair<Controller::Command, int>>
     Controller::str_to_command = {
         {"cr", {Controller::Command::Create, 1}},
@@ -16,7 +18,8 @@ const std::unordered_map<std::string, std::pair<Controller::Command, int>>
         {"wr", {Controller::Command::Write, 3}},
         {"sk", {Controller::Command::Seek, 2}},
         {"dr", {Controller::Command::Directory, 0}},
-        {"sv", {Controller::Command::Save, 0}}};
+        {"sv", {Controller::Command::Save, 0}},
+        {"q", {Controller::Command::Quit, 0}}};
 
 auto Controller::convert(std::string str) -> std::pair<Controller::Command, int>
 {
@@ -49,7 +52,7 @@ void Controller::work(std::istream& in, std::ostream& out)
     {
         auto args = Utils::split(buffer);
         auto wow = parseCommand(args);
-        if (wow == "exit") return;
+        if (wow == c_quit_str) return;
         out << wow;
     }
 }
@@ -128,10 +131,14 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 int count = std::atoi(args[2].c_str());
                 std::string mem_area(count, ' ');
                 auto res = filesystem->read(index, mem_area.data(), count);
-                output = std::to_string(res.second) + " bytes read: " + mem_area;
-                if (res.first != FS::Status::Success)
+                mem_area.resize(res.second);
+                if (res.first == FS::Status::Success)
                 {
-                    output += toString(res.first);
+                    output = std::to_string(res.second) + " bytes read: " + mem_area;
+                }
+                else
+                {
+                    output = toString(res.first);
                 }
             }
             break;
@@ -143,7 +150,7 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 auto res = filesystem->write(index, mem_area.data(), count);
                 if (res.first == FS::Status::Success)
                 {
-                    output = std::to_string(count) + " bytes written";
+                    output = std::to_string(res.second) + " bytes written";
                 }
                 else
                 {
@@ -174,14 +181,19 @@ std::string Controller::parseCommand(std::vector<std::string> args)
             }
             break;
             case Command::Save: {
-                std::cout << "save";
+                output = "saved";
+            }
+            break;
+            case Command::Quit: {
+                output = c_quit_str;
+                return output;
             }
             break;
         }
     }
     else
     {
-        return "exit";
+        return "";
     }
     output += '\n';
     return output;
