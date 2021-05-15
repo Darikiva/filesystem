@@ -1,0 +1,13 @@
+file foo  created
+file foo  opened, index = 1
+current position is 0
+50 bytes written
+10 bytes written
+current position is 55
+file 1 closed
+NotFound
+NotFound
+NotFound
+NotFound
+file foo  opened, index = 1
+60 bytes read: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyy
