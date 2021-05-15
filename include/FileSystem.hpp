@@ -21,7 +21,6 @@ DECLARE_ENUM(
     NoFreeDescriptor,
     AlreadyExists,
     OutputArrIndexOutOfBounds,
-    EndOfFile,
     PositionOutOfBounds)
 
 namespace FS {

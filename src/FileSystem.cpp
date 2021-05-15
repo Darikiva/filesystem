@@ -266,7 +266,7 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 
     if (read_result.second != count)
     {
-        return std::pair<Status, int>(Status::EndOfFile, read_result.second);
+        return std::pair<Status, int>(Status::Success, read_result.second);
     }
     else
     {
@@ -289,7 +289,7 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
 
     if (number_of_written != count)
     {
-        return std::pair<Status, int>(Status::EndOfFile, number_of_written);
+        return std::pair<Status, int>(Status::Success, number_of_written);
     }
     else
     {
