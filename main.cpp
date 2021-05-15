@@ -10,7 +10,7 @@ int main()
         "../test/test-fs-overflow.txt",             // 0
         "../test/test-end-of-file.txt",             // 1
         "../test/test-sample.txt",                  // 2
-        "../test/custom-test-destroy.txt",          // 3
+        "../test/test-destroy.txt",                 // 3
         "../test/test-close.txt",                   // 4
         "../test/test-buffer-load.txt",             // 5
         "../test/test-buffer-block-changing.txt",   // 6

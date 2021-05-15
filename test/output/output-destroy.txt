@@ -1,0 +1,18 @@
+file foo  created
+file foo  opened, index = 1
+20 bytes written
+file foo  destroyed
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+file foo  created
+file foo  opened, index = 1
+0 bytes read: 
+10 bytes written
+current position is 0
+10 bytes read: uuuuuuuuuu
