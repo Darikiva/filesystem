@@ -1,0 +1,15 @@
+cr foo
+op foo
+wr 1 z 150
+sk 1 20
+rd 1 10
+sk 1 10
+wr 1 y 20
+sk 1 140
+wr 1 f 30
+sk 1 70
+wr 1 o 30
+dr
+cl 1
+op foo
+rd 1 170
