@@ -7,4 +7,4 @@ current position is 70
 5 bytes read: xxxxx
 current position is 0
 150 bytes read: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
-foo ¿ÚÇ 150; 
+foo  150; 

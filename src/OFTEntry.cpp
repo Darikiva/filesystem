@@ -26,16 +26,23 @@ size_t OFTEntry::getNextBlock()
     return file_descriptor.indexes[curr_block_index + 1];
 }
 
-bool OFTEntry::moveToNextBlock(bool load_prev_to_disk)
+bool OFTEntry::moveToNextBlock()
 {
     size_t next_block = getNextBlock();
     if (next_block == -1)
     {
         return false;
     }
-    if (load_prev_to_disk)
+    if (is_buffer_modified)
     {
-        iosystem->write_block(cur_block, buffer);
+        if (is_buffer_relevant)
+        {
+            iosystem->write_block(cur_block, buffer);
+        }
+        else
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
     }
     cur_block = next_block;
     cur_pos = 0;
@@ -58,15 +65,12 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
         return 0;
     }
 
-    if (is_buffer_empty)
+    if (!is_buffer_relevant)
     {
-        updateBuffer();
-        is_buffer_empty = false;
-    }
-    // read actual block to buffer
-    if (is_buffer_changed)
-    {
-        iosystem->write_block(changed_block, buffer);
+        if (is_buffer_modified)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
         updateBuffer();
     }
 
@@ -74,12 +78,13 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     for (size_t i = 0; i < count; i++)
     {
         buffer[cur_pos] = mem_area[i];
+        is_buffer_modified = true;
 
         ++cur_pos;
         // reached end of block
         if (cur_pos == Disk::BLOCK_SIZE)
         {
-            bool block_updated = moveToNextBlock(true);
+            bool block_updated = moveToNextBlock();
             // reached end of file
             if (!block_updated)
             {
@@ -110,15 +115,12 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
         return {std::string(), 0};
     }
 
-    if (is_buffer_empty)
+    if (!is_buffer_relevant)
     {
-        updateBuffer();
-        is_buffer_empty = false;
-    }
-
-    if (is_buffer_changed)
-    {
-        iosystem->write_block(changed_block, buffer);
+        if (is_buffer_modified)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
         updateBuffer();
     }
 
@@ -137,7 +139,7 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
         // reached end of block
         if (cur_pos == Disk::BLOCK_SIZE)
         {
-            bool block_updated = moveToNextBlock(false);
+            bool block_updated = moveToNextBlock();
             // reached end of file
             if (!block_updated)
             {
@@ -152,7 +154,8 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
 void OFTEntry::updateBuffer()
 {
     iosystem->read_block(cur_block, buffer);
-    is_buffer_changed = false;
+    is_buffer_modified = false;
+    is_buffer_relevant = true;
 }
 
 size_t OFTEntry::setPosition(size_t new_pos)
@@ -161,7 +164,7 @@ size_t OFTEntry::setPosition(size_t new_pos)
     cur_pos = new_pos % Disk::BLOCK_SIZE;
     if (file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE] != cur_block)
     {
-        is_buffer_changed = true;
+        is_buffer_relevant = false;
         cur_block = file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE];
     }
     return new_pos;
@@ -169,13 +172,16 @@ size_t OFTEntry::setPosition(size_t new_pos)
 
 void OFTEntry::onClose()
 {
-    if (is_buffer_changed)
+    if (is_buffer_modified)
     {
-        iosystem->write_block(changed_block, buffer);
-    }
-    else
-    {
-        iosystem->write_block(cur_block, buffer);
+        if (!is_buffer_relevant)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
+        else
+        {
+            iosystem->write_block(cur_block, buffer);
+        }
     }
 }
 

@@ -1,0 +1,15 @@
+file foo  created
+file foo  opened, index = 1
+150 bytes written
+current position is 20
+10 bytes read: zzzzzzzzzz
+current position is 10
+20 bytes written
+current position is 140
+30 bytes written
+current position is 70
+30 bytes written
+foo  170; 
+file 1 closed
+file foo  opened, index = 1
+170 bytes read: zzzzzzzzzzyyyyyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzoooooooooooooooooooooooooooooozzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzffffffffffffffffffffffffffffff
