@@ -1,0 +1,11 @@
+file foo  created
+file foo  opened, index = 1
+file foo  destroyed
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
+NotFound
