@@ -1,5 +1,6 @@
 cr foo
 op foo
+wr 1 z 20
 de foo
 sk 1 10
 wr 1 x 50
@@ -9,3 +10,9 @@ rd 1 10
 sk 10 0
 op foo
 sk 1 10
+cr foo
+op foo
+rd 1 70
+wr 1 u 10
+sk 1 0
+rd 1 20

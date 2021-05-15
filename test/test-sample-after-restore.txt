@@ -1,0 +1,5 @@
+op foo
+rd 1 3
+cr foo
+cl 1
+dr

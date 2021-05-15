@@ -9,6 +9,7 @@ namespace FS {
 OFT::OFT(IOSystem* iosystem)
     : iosystem{iosystem}
     , first_use{true}
+    , emptyOFTEntry(OFTEntry(Entity::FileDescriptor{0, {-1, -1, -1}}, -1, iosystem))
 {
 }
 
@@ -49,6 +50,7 @@ void OFT::set(size_t index, const OFTEntry& value)
 
 void OFT::reset()
 {
+    data.clear();
     for (int i = 0; i < 5; i++)
     {
         data.push_back(emptyOFTEntry);

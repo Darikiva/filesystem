@@ -18,7 +18,8 @@ size_t OFTEntry::getCurrBlockIndex()
 size_t OFTEntry::getNextBlock()
 {
     size_t curr_block_index = getCurrBlockIndex();
-    if (curr_block_index == sizeof(file_descriptor.indexes) - 1)
+    if (curr_block_index == sizeof(file_descriptor.indexes) - 1 ||
+        file_descriptor.indexes[curr_block_index + 1] == -1)
     {
         return -1;
     }
@@ -50,7 +51,7 @@ bool OFTEntry::moveToNextBlock()
     return true;
 }
 
-size_t OFTEntry::getLengthByCurPos()
+size_t OFTEntry::getAbsoluteCurrentPosition()
 {
     size_t curr_block_index = getCurrBlockIndex();
 
@@ -98,7 +99,7 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
         number_of_written = count;
     }
     changed_block = cur_block;
-    auto new_length = getLengthByCurPos();
+    auto new_length = getAbsoluteCurrentPosition();
     if (new_length > file_descriptor.file_length)
     {
         file_descriptor.file_length = new_length;
@@ -198,5 +199,10 @@ size_t OFTEntry::getDescriptorIndex() const
 Entity::FileDescriptor OFTEntry::getDescriptor()
 {
     return file_descriptor;
+}
+
+void OFTEntry::setDescriptorIndex(std::int8_t index, size_t position)
+{
+    file_descriptor.indexes[position] = index;
 }
 }; // namespace FS

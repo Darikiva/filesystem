@@ -9,7 +9,7 @@ current position is 140
 30 bytes written
 current position is 70
 30 bytes written
-foo  170; 
+foo @ò‚ 170; 
 file 1 closed
 file foo  opened, index = 1
 170 bytes read: zzzzzzzzzzyyyyyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzoooooooooooooooooooooooooooooozzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzffffffffffffffffffffffffffffff
