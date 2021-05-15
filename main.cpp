@@ -9,7 +9,10 @@ int main()
 {
     FS::Controller controller("saving.bin");
     controller.reset();
-    controller.work(std::cin, std::cout);
-    
+    std::ifstream in("test/test_end_of_file.txt");
+    std::ofstream out("test/test_end_of_file_output.txt");
+    controller.work(in, out);
+    in.close();
+    out.close();
     return 0;
 }
