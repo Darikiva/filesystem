@@ -35,12 +35,12 @@ private:
     size_t changed_block;
     size_t cur_block;
     IOSystem* iosystem;
-    bool is_buffer_changed = false;
-    bool is_buffer_empty = true;
+    bool is_buffer_relevant = false;
+    bool is_buffer_modified = false;
     void updateBuffer();
     size_t getCurrBlockIndex();
     size_t getNextBlock();
-    bool moveToNextBlock(bool load_prev_to_disk);
+    bool moveToNextBlock();
     size_t getLengthByCurPos();
 };
 
