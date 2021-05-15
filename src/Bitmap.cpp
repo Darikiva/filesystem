@@ -133,7 +133,7 @@ void Bitmap::reset()
     for (int i = 0; i < 3; i++) {
         data.set(i, true); // always blocked for directory file
     }
-    for (size_t index = 1; index < data.size(); ++index)
+    for (size_t index = 3; index < data.size(); ++index)
     {
         data.set(index, false);
     }

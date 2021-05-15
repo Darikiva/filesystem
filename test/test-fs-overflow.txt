@@ -25,6 +25,4 @@ cr f24
 cr f25
 cr f26
 cr f27
-cr f28
-cr f29
 cr bar

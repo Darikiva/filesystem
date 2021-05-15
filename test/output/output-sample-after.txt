@@ -1,0 +1,5 @@
+file foo  opened, index = 1
+3 bytes read: xxx
+AlreadyExists
+file 1 closed
+foo  ò‚ 70; 
