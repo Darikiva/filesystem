@@ -1,8 +1,8 @@
 #pragma once
 
 #include <bitset>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include "Bitmap.hpp"
 #include "Descriptors.hpp"
@@ -45,6 +45,8 @@ private:
     Descriptors descriptors;
     Directories directories;
     OFT oft;
+
+    std::int8_t findFreeBlock();
 };
 
 } // namespace FS

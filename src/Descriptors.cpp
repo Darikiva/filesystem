@@ -113,7 +113,7 @@ void Descriptors::reset()
     {
         loadDescriptors();
     }
-    Entity::FileDescriptor directory_desc = {0, {0, -1, -1}};
+    Entity::FileDescriptor directory_desc = {0, {0, 1, 2}};
     data[0] = directory_desc;
     for (size_t index = 1; index < size(); ++index)
     {

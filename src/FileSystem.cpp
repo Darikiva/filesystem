@@ -19,6 +19,21 @@ void FileSystem::reset()
     oft.reset();
 }
 
+std::int8_t FileSystem::findFreeBlock()
+{
+    std::int8_t free_block_index = -1;
+    for (size_t i = 0; i < bitmap.size(); i++)
+    {
+        if (!bitmap.get(i))
+        {
+            bitmap.set(i, true);
+            free_block_index = Disk::K + i;
+            break;
+        }
+    }
+    return free_block_index;
+}
+
 /**
  *
  * 1) find a free file descriptor (scan ldisk[0] through ldisk[k-1])
@@ -75,30 +90,14 @@ Status FileSystem::create(const std::string& file_name)
         return Status::NoSpace;
     }
 
-    // free blocks
-    std::int8_t free_blocks_indexes[3] = {-1, -1, -1};
-    int number_of_found = 0;
-    for (size_t i = 0; i < bitmap.size(); i++)
-    {
-        if (number_of_found == 3)
-        {
-            break;
-        }
-        if (!bitmap.get(i))
-        {
-            bitmap.set(i, true);
-            free_blocks_indexes[number_of_found] = Disk::K + i;
-            ++number_of_found;
-        }
-    }
+    std::int8_t free_block_index = findFreeBlock();
 
-    if (number_of_found != 3)
+    if (free_block_index == -1)
     {
         return Status::NoSpace;
     }
 
-    Entity::FileDescriptor directory_desc = {
-        0, free_blocks_indexes[0], free_blocks_indexes[1], free_blocks_indexes[2]};
+    Entity::FileDescriptor directory_desc = {0, free_block_index, -1, -1};
     descriptors.set(desc_index, directory_desc);
 
     char name_char[4]{file_name.at(0), file_name.at(1), file_name.at(2), file_name.at(3)};
@@ -147,7 +146,10 @@ Status FileSystem::destroy(const std::string& file_name)
     auto desc = descriptors.get(desc_index);
     for (signed char index : desc.indexes)
     {
-        bitmap.set(index, false);
+        if (index != -1)
+        {
+            bitmap.set(index, false);
+        }
     }
 
     Entity::FileDescriptor empty_desc = {0, {-1, -1, -1}};
@@ -282,6 +284,18 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
         return std::pair<Status, int>(Status::NotFound, 0);
+    }
+
+    size_t positionAfterWrite = oft_entry->getAbsoluteCurrentPosition() + count;
+    for (int i = 1; i < sizeof(oft_entry->getDescriptor().indexes); i++)
+    {
+        if (positionAfterWrite > Disk::BLOCK_SIZE * i)
+        {
+            if (oft_entry->getDescriptor().indexes[i] == -1)
+            {
+                oft_entry->setDescriptorIndex(findFreeBlock(), i);
+            }
+        }
     }
 
     size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);

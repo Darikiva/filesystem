@@ -26,6 +26,8 @@ public:
     bool isEmpty() const;
     size_t getDescriptorIndex() const;
     Entity::FileDescriptor getDescriptor();
+    void setDescriptorIndex(std::int8_t index, size_t position);
+    size_t getAbsoluteCurrentPosition();
 
 private:
     char buffer[Disk::BLOCK_SIZE];
@@ -41,7 +43,6 @@ private:
     size_t getCurrBlockIndex();
     size_t getNextBlock();
     bool moveToNextBlock(bool load_prev_to_disk);
-    size_t getLengthByCurPos();
 };
 
 } // namespace FS
