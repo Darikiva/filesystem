@@ -17,12 +17,12 @@ int main()
     };
 
     std::string OUT[] = {
-        "../test/test_fs_overflow_output.txt",
-        "../test/test_end_of_file_output.txt",
-        "../test/output-sample.txt",
-        "../test/output-destroy.txt",
-        "../test/output-close.txt",
-        "../test/output-buffer-load.txt"
+        "../test/output/test_fs_overflow_output.txt",
+        "../test/output/test_end_of_file_output.txt",
+        "../test/output/output-sample.txt",
+        "../test/output/output-destroy.txt",
+        "../test/output/output-close.txt",
+        "../test/output/output-buffer-load.txt"
     };
 
     FS::Controller controller("saving.bin");
