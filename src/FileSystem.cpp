@@ -300,6 +300,12 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
 std::pair<Status, size_t> FileSystem::lseek(size_t index, size_t pos)
 {
     size_t index_in_oft_array = index - 1;
+
+    if (oft.get(index_in_oft_array) == nullptr || oft.get(index_in_oft_array)->isEmpty())
+    {
+        return {Status::NotFound, -1};
+    }
+
     if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
     {
         return {Status::PositionOutOfBounds, -1};
@@ -314,7 +320,8 @@ std::unordered_map<std::string, uint8_t> FileSystem::directory()
     for (size_t i = 0; i < directories.size(); i++)
     {
         auto directory = directories.get(i);
-        if (directory.descriptor_index != -1) {
+        if (directory.descriptor_index != -1)
+        {
             std::int8_t descriptor_index = directory.descriptor_index;
             auto file_length = descriptors.get(descriptor_index).file_length;
             directory_map[directory.file_name] = file_length;
