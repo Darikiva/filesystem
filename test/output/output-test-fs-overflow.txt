@@ -26,5 +26,3 @@ file f25  created
 file f26  created
 file f27  created
 NoSpace
-NoSpace
-NoSpace
