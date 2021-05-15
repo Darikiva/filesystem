@@ -50,6 +50,7 @@ void OFT::set(size_t index, const OFTEntry& value)
 
 void OFT::reset()
 {
+    data.clear();
     for (int i = 0; i < 5; i++)
     {
         data.push_back(emptyOFTEntry);
