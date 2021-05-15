@@ -19,6 +19,21 @@ void FileSystem::reset()
     oft.reset();
 }
 
+std::int8_t FileSystem::findFreeBlock()
+{
+    std::int8_t free_block_index = -1;
+    for (size_t i = 0; i < bitmap.size(); i++)
+    {
+        if (!bitmap.get(i))
+        {
+            bitmap.set(i, true);
+            free_block_index = Disk::K + i;
+            break;
+        }
+    }
+    return free_block_index;
+}
+
 /**
  *
  * 1) find a free file descriptor (scan ldisk[0] through ldisk[k-1])
@@ -75,30 +90,14 @@ Status FileSystem::create(const std::string& file_name)
         return Status::NoSpace;
     }
 
-    // free blocks
-    std::int8_t free_blocks_indexes[3] = {-1, -1, -1};
-    int number_of_found = 0;
-    for (size_t i = 0; i < bitmap.size(); i++)
-    {
-        if (number_of_found == 3)
-        {
-            break;
-        }
-        if (!bitmap.get(i))
-        {
-            bitmap.set(i, true);
-            free_blocks_indexes[number_of_found] = Disk::K + i;
-            ++number_of_found;
-        }
-    }
+    std::int8_t free_block_index = findFreeBlock();
 
-    if (number_of_found != 3)
+    if (free_block_index == -1)
     {
         return Status::NoSpace;
     }
 
-    Entity::FileDescriptor directory_desc = {
-        0, free_blocks_indexes[0], free_blocks_indexes[1], free_blocks_indexes[2]};
+    Entity::FileDescriptor directory_desc = {0, free_block_index, -1, -1};
     descriptors.set(desc_index, directory_desc);
 
     char name_char[4]{file_name.at(0), file_name.at(1), file_name.at(2), file_name.at(3)};
@@ -147,7 +146,10 @@ Status FileSystem::destroy(const std::string& file_name)
     auto desc = descriptors.get(desc_index);
     for (signed char index : desc.indexes)
     {
-        bitmap.set(index, false);
+        if (index != -1)
+        {
+            bitmap.set(index, false);
+        }
     }
 
     Entity::FileDescriptor empty_desc = {0, {-1, -1, -1}};
@@ -204,6 +206,11 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
     int oft_index = -1;
     for (size_t i = 0; i < oft.size(); i++)
     {
+        if (oft.get(i)->getDescriptorIndex() == desc_index)
+        {
+            lseek(i + 1, 0);
+            return std::pair<Status, size_t>(Status::Success, i + 1);
+        }
         if (oft.get(i)->isEmpty())
         {
             oft_index = i;
@@ -218,7 +225,7 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
 
     oft.set(oft_index, OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
 
-    return std::pair<Status, size_t>(Status::Success, oft_index);
+    return std::pair<Status, size_t>(Status::Success, oft_index + 1);
 }
 
 /**
@@ -229,7 +236,8 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
  */
 Status FileSystem::close(size_t index)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
@@ -238,13 +246,14 @@ Status FileSystem::close(size_t index)
 
     oft_entry->onClose();
     descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
-    oft.set(index, oft.emptyOFTEntry);
+    oft.set(index_in_oft_array, oft.emptyOFTEntry);
     return Status::Success;
 }
 
 std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
@@ -259,7 +268,7 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 
     if (read_result.second != count)
     {
-        return std::pair<Status, int>(Status::EndOfFile, read_result.second);
+        return std::pair<Status, int>(Status::Success, read_result.second);
     }
     else
     {
@@ -269,11 +278,24 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 
 std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
         return std::pair<Status, int>(Status::NotFound, 0);
+    }
+
+    size_t positionAfterWrite = oft_entry->getAbsoluteCurrentPosition() + count;
+    for (int i = 1; i < sizeof(oft_entry->getDescriptor().indexes); i++)
+    {
+        if (positionAfterWrite > Disk::BLOCK_SIZE * i)
+        {
+            if (oft_entry->getDescriptor().indexes[i] == -1)
+            {
+                oft_entry->setDescriptorIndex(findFreeBlock(), i);
+            }
+        }
     }
 
     size_t number_of_written = oft_entry->writeToBuffer(mem_area, count);
@@ -281,7 +303,7 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
 
     if (number_of_written != count)
     {
-        return std::pair<Status, int>(Status::EndOfFile, number_of_written);
+        return std::pair<Status, int>(Status::Success, number_of_written);
     }
     else
     {
@@ -291,11 +313,18 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
 
 std::pair<Status, size_t> FileSystem::lseek(size_t index, size_t pos)
 {
+    size_t index_in_oft_array = index - 1;
+
+    if (oft.get(index_in_oft_array) == nullptr || oft.get(index_in_oft_array)->isEmpty())
+    {
+        return {Status::NotFound, -1};
+    }
+
     if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
     {
         return {Status::PositionOutOfBounds, -1};
     }
-    auto cur_pos = oft.get(index)->setPosition(pos);
+    auto cur_pos = oft.get(index_in_oft_array)->setPosition(pos);
     return {Status::Success, cur_pos};
 }
 
@@ -305,7 +334,8 @@ std::unordered_map<std::string, uint8_t> FileSystem::directory()
     for (size_t i = 0; i < directories.size(); i++)
     {
         auto directory = directories.get(i);
-        if (directory.descriptor_index != -1) {
+        if (directory.descriptor_index != -1)
+        {
             std::int8_t descriptor_index = directory.descriptor_index;
             auto file_length = descriptors.get(descriptor_index).file_length;
             directory_map[directory.file_name] = file_length;

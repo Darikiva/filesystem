@@ -18,7 +18,8 @@ size_t OFTEntry::getCurrBlockIndex()
 size_t OFTEntry::getNextBlock()
 {
     size_t curr_block_index = getCurrBlockIndex();
-    if (curr_block_index == sizeof(file_descriptor.indexes) - 1)
+    if (curr_block_index == sizeof(file_descriptor.indexes) - 1 ||
+        file_descriptor.indexes[curr_block_index + 1] == -1)
     {
         return -1;
     }
@@ -26,16 +27,23 @@ size_t OFTEntry::getNextBlock()
     return file_descriptor.indexes[curr_block_index + 1];
 }
 
-bool OFTEntry::moveToNextBlock(bool load_prev_to_disk)
+bool OFTEntry::moveToNextBlock()
 {
     size_t next_block = getNextBlock();
     if (next_block == -1)
     {
         return false;
     }
-    if (load_prev_to_disk)
+    if (is_buffer_modified)
     {
-        iosystem->write_block(cur_block, buffer);
+        if (is_buffer_relevant)
+        {
+            iosystem->write_block(cur_block, buffer);
+        }
+        else
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
     }
     cur_block = next_block;
     cur_pos = 0;
@@ -43,7 +51,7 @@ bool OFTEntry::moveToNextBlock(bool load_prev_to_disk)
     return true;
 }
 
-size_t OFTEntry::getLengthByCurPos()
+size_t OFTEntry::getAbsoluteCurrentPosition()
 {
     size_t curr_block_index = getCurrBlockIndex();
 
@@ -58,15 +66,12 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
         return 0;
     }
 
-    if (is_buffer_empty)
+    if (!is_buffer_relevant)
     {
-        updateBuffer();
-        is_buffer_empty = false;
-    }
-    // read actual block to buffer
-    if (is_buffer_changed)
-    {
-        iosystem->write_block(changed_block, buffer);
+        if (is_buffer_modified)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
         updateBuffer();
     }
 
@@ -74,12 +79,13 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
     for (size_t i = 0; i < count; i++)
     {
         buffer[cur_pos] = mem_area[i];
+        is_buffer_modified = true;
 
         ++cur_pos;
         // reached end of block
         if (cur_pos == Disk::BLOCK_SIZE)
         {
-            bool block_updated = moveToNextBlock(true);
+            bool block_updated = moveToNextBlock();
             // reached end of file
             if (!block_updated)
             {
@@ -93,7 +99,7 @@ int OFTEntry::writeToBuffer(const char* mem_area, int count)
         number_of_written = count;
     }
     changed_block = cur_block;
-    auto new_length = getLengthByCurPos();
+    auto new_length = getAbsoluteCurrentPosition();
     if (new_length > file_descriptor.file_length)
     {
         file_descriptor.file_length = new_length;
@@ -110,15 +116,12 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
         return {std::string(), 0};
     }
 
-    if (is_buffer_empty)
+    if (!is_buffer_relevant)
     {
-        updateBuffer();
-        is_buffer_empty = false;
-    }
-
-    if (is_buffer_changed)
-    {
-        iosystem->write_block(changed_block, buffer);
+        if (is_buffer_modified)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
         updateBuffer();
     }
 
@@ -137,7 +140,7 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
         // reached end of block
         if (cur_pos == Disk::BLOCK_SIZE)
         {
-            bool block_updated = moveToNextBlock(false);
+            bool block_updated = moveToNextBlock();
             // reached end of file
             if (!block_updated)
             {
@@ -152,7 +155,8 @@ std::pair<std::string, int> OFTEntry::readFromBuffer(int count)
 void OFTEntry::updateBuffer()
 {
     iosystem->read_block(cur_block, buffer);
-    is_buffer_changed = false;
+    is_buffer_modified = false;
+    is_buffer_relevant = true;
 }
 
 size_t OFTEntry::setPosition(size_t new_pos)
@@ -161,7 +165,7 @@ size_t OFTEntry::setPosition(size_t new_pos)
     cur_pos = new_pos % Disk::BLOCK_SIZE;
     if (file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE] != cur_block)
     {
-        is_buffer_changed = true;
+        is_buffer_relevant = false;
         cur_block = file_descriptor.indexes[new_pos / Disk::BLOCK_SIZE];
     }
     return new_pos;
@@ -169,13 +173,16 @@ size_t OFTEntry::setPosition(size_t new_pos)
 
 void OFTEntry::onClose()
 {
-    if (is_buffer_changed)
+    if (is_buffer_modified)
     {
-        iosystem->write_block(changed_block, buffer);
-    }
-    else
-    {
-        iosystem->write_block(cur_block, buffer);
+        if (!is_buffer_relevant)
+        {
+            iosystem->write_block(changed_block, buffer);
+        }
+        else
+        {
+            iosystem->write_block(cur_block, buffer);
+        }
     }
 }
 
@@ -192,5 +199,10 @@ size_t OFTEntry::getDescriptorIndex() const
 Entity::FileDescriptor OFTEntry::getDescriptor()
 {
     return file_descriptor;
+}
+
+void OFTEntry::setDescriptorIndex(std::int8_t index, size_t position)
+{
+    file_descriptor.indexes[position] = index;
 }
 }; // namespace FS

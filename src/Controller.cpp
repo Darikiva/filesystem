@@ -132,7 +132,14 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 std::string mem_area(count, ' ');
                 auto res = filesystem->read(index, mem_area.data(), count);
                 mem_area.resize(res.second);
-                output = std::to_string(res.second) + " bytes read: " + mem_area;
+                if (res.first == FS::Status::Success)
+                {
+                    output = std::to_string(res.second) + " bytes read: " + mem_area;
+                }
+                else
+                {
+                    output = toString(res.first);
+                }
             }
             break;
             case Command::Write: {
@@ -141,7 +148,14 @@ std::string Controller::parseCommand(std::vector<std::string> args)
                 int count = std::atoi(args[3].c_str());
                 std::string mem_area(count, ch);
                 auto res = filesystem->write(index, mem_area.data(), count);
-                output = std::to_string(res.second) + " bytes written";
+                if (res.first == FS::Status::Success)
+                {
+                    output = std::to_string(res.second) + " bytes written";
+                }
+                else
+                {
+                    output = toString(res.first);
+                }
             }
             break;
             case Command::Seek: {

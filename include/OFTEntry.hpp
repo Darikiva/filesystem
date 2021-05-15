@@ -26,6 +26,8 @@ public:
     bool isEmpty() const;
     size_t getDescriptorIndex() const;
     Entity::FileDescriptor getDescriptor();
+    void setDescriptorIndex(std::int8_t index, size_t position);
+    size_t getAbsoluteCurrentPosition();
 
 private:
     char buffer[Disk::BLOCK_SIZE];
@@ -35,13 +37,13 @@ private:
     size_t changed_block;
     size_t cur_block;
     IOSystem* iosystem;
-    bool is_buffer_changed = false;
-    bool is_buffer_empty = true;
+    bool is_buffer_relevant = false;
+    bool is_buffer_modified = false;
     void updateBuffer();
     size_t getCurrBlockIndex();
     size_t getNextBlock();
+    bool moveToNextBlock();
     bool moveToNextBlock(bool load_prev_to_disk);
-    size_t getLengthByCurPos();
 };
 
 } // namespace FS

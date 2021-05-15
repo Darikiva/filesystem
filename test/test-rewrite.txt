@@ -1,0 +1,11 @@
+cr foo
+op foo
+wr 1 x 100
+wr 1 y 50
+sk 1 0
+rd 1 192
+sk 1 75
+wr 1 z 50
+sk 1 0
+rd 1 192
+dr

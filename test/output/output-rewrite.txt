@@ -1,0 +1,11 @@
+file foo  created
+file foo  opened, index = 1
+100 bytes written
+50 bytes written
+current position is 0
+170 bytes read: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyffffffffffffffffffff
+current position is 75
+50 bytes written
+current position is 0
+170 bytes read: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyffffffffffffffffffff
+foo @ò‚ 170; 
