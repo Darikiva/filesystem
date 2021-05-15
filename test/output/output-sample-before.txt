@@ -1,0 +1,8 @@
+file foo  created
+file foo  opened, index = 1
+60 bytes written
+10 bytes written
+current position is 55
+10 bytes read: xxxxxyyyyy
+foo  ò‚ 70; 
+saved

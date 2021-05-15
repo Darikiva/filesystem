@@ -28,6 +28,7 @@ int main()
         "../test/output/output-rewrite.txt"};
 
     FS::Controller controller("saving.bin");
+
     for (int i = 0; i < sizeof(IN) / sizeof(*IN); i++)
     {
         controller.reset();
@@ -39,4 +40,21 @@ int main()
         out.close();
     }
     return 0;
+}
+
+void sample() {
+    FS::Controller controller("saving.bin");
+
+    //comment this after first run
+    controller.reset();
+    std::ifstream in("../test/test-sample-before-restore.txt");
+    std::ofstream out("../test/output/output-sample-before.txt");
+
+    //uncomment this after first run
+//    std::ifstream in("../test/test-sample-after-restore.txt");
+//    std::ofstream out("../test/output/output-sample-after.txt");
+    controller.work(in, out);
+
+    in.close();
+    out.close();
 }
