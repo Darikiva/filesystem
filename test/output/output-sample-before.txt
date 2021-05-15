@@ -4,5 +4,5 @@ file foo  opened, index = 1
 10 bytes written
 current position is 55
 10 bytes read: xxxxxyyyyy
-foo  ò‚ 70; 
+foo  70; 
 saved

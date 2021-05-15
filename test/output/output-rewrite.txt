@@ -8,4 +8,4 @@ current position is 75
 50 bytes written
 current position is 0
 150 bytes read: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyy
-foo @ò‚ 150; 
+foo  150; 
