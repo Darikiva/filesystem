@@ -204,6 +204,11 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
     int oft_index = -1;
     for (size_t i = 0; i < oft.size(); i++)
     {
+        if (oft.get(i)->getDescriptorIndex() == desc_index)
+        {
+            lseek(i + 1, 0);
+            return std::pair<Status, size_t>(Status::Success, i + 1);
+        }
         if (oft.get(i)->isEmpty())
         {
             oft_index = i;
@@ -218,7 +223,7 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
 
     oft.set(oft_index, OFTEntry(descriptors.get(desc_index), desc_index, oft.getIoSystem()));
 
-    return std::pair<Status, size_t>(Status::Success, oft_index);
+    return std::pair<Status, size_t>(Status::Success, oft_index + 1);
 }
 
 /**
@@ -229,7 +234,8 @@ std::pair<Status, size_t> FileSystem::open(const std::string& file_name)
  */
 Status FileSystem::close(size_t index)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
@@ -238,13 +244,14 @@ Status FileSystem::close(size_t index)
 
     oft_entry->onClose();
     descriptors.set(oft_entry->getDescriptorIndex(), oft_entry->getDescriptor());
-    oft.set(index, oft.emptyOFTEntry);
+    oft.set(index_in_oft_array, oft.emptyOFTEntry);
     return Status::Success;
 }
 
 std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
@@ -269,7 +276,8 @@ std::pair<Status, int> FileSystem::read(size_t index, char* mem_area, int count)
 
 std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count)
 {
-    OFTEntry* oft_entry = oft.get(index);
+    size_t index_in_oft_array = index - 1;
+    OFTEntry* oft_entry = oft.get(index_in_oft_array);
 
     if (oft_entry == nullptr || oft_entry->isEmpty())
     {
@@ -291,11 +299,12 @@ std::pair<Status, int> FileSystem::write(size_t index, char* mem_area, int count
 
 std::pair<Status, size_t> FileSystem::lseek(size_t index, size_t pos)
 {
+    size_t index_in_oft_array = index - 1;
     if (pos < 0 || pos > Disk::BLOCK_SIZE * 3 - 1)
     {
         return {Status::PositionOutOfBounds, -1};
     }
-    auto cur_pos = oft.get(index)->setPosition(pos);
+    auto cur_pos = oft.get(index_in_oft_array)->setPosition(pos);
     return {Status::Success, cur_pos};
 }
 
