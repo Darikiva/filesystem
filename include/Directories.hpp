@@ -16,7 +16,7 @@ public:
     Entity::DirectoryEntry& get(std::size_t index);
     void set(size_t index, const Entity::DirectoryEntry& value);
     void reset();
-    inline size_t size() const { return Disk::BLOCK_SIZE * 3 / directory_size; }
+    inline size_t size() const { return (Disk::BLOCK_SIZE / directory_size) * 3; }
 
 private:
     std::vector<Entity::DirectoryEntry> data;

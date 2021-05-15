@@ -9,6 +9,7 @@ namespace FS {
 OFT::OFT(IOSystem* iosystem)
     : iosystem{iosystem}
     , first_use{true}
+    , emptyOFTEntry(OFTEntry(Entity::FileDescriptor{0, {-1, -1, -1}}, -1, iosystem))
 {
 }
 
